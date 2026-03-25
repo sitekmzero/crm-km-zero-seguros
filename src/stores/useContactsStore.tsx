@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 export type ContactStatus =
   | 'subscriber'
@@ -18,96 +26,156 @@ export interface Contact {
   createdAt: Date
   lastActivityDate: Date
   companyName: string
+  cpf?: string
+  cep?: string
+  produto_interesse?: string
+  modelo_captura?: string
+  observacoes?: string
+  proprietario_id?: string
 }
 
 interface ContactsContextType {
   contacts: Contact[]
-  addContact: (
-    contact: Omit<
-      Contact,
-      'id' | 'createdAt' | 'lastActivityDate' | 'companyName'
-    > & { companyName?: string },
-  ) => void
-  updateContact: (
-    id: string,
-    data: Partial<Omit<Contact, 'id' | 'createdAt'>>,
-  ) => void
-  deleteContact: (id: string) => void
+  addContact: (data: Partial<Contact>) => Promise<void>
+  updateContact: (id: string, data: Partial<Contact>) => Promise<void>
+  deleteContact: (id: string) => Promise<void>
+  refreshContacts: () => Promise<void>
 }
 
 const ContactsContext = createContext<ContactsContextType | undefined>(
   undefined,
 )
 
-const INITIAL_CONTACTS: Contact[] = [
-  {
-    id: '1',
-    firstName: 'Brian',
-    lastName: 'Halligan (Sample Contact)',
-    email: 'brian@hubspot.com',
-    phone: '555-0100',
-    status: 'lead',
-    createdAt: new Date('2026-01-15'),
-    lastActivityDate: new Date('2026-01-22T10:00:00'),
-    companyName: 'HubSpot',
-  },
-  {
-    id: '2',
-    firstName: 'Maria',
-    lastName: 'Johnson (Sample Contact)',
-    email: 'maria@hubspot.com',
-    phone: '555-0101',
-    status: 'lead',
-    createdAt: new Date('2026-01-18'),
-    lastActivityDate: new Date('2026-01-22T14:30:00'),
-    companyName: 'HubSpot',
-  },
-]
+const mapDbToContact = (row: any): Contact => ({
+  id: row.id,
+  firstName: row.first_name || '',
+  lastName: row.last_name || '',
+  email: row.email || '',
+  phone: row.phone || '',
+  status: row.status as ContactStatus,
+  createdAt: new Date(row.created_at),
+  lastActivityDate: new Date(row.last_activity_date),
+  companyName: row.company_name || '',
+  cpf: row.cpf,
+  cep: row.cep,
+  produto_interesse: row.produto_interesse,
+  modelo_captura: row.modelo_captura,
+  observacoes: row.observacoes,
+  proprietario_id: row.proprietario_id,
+})
 
 export const ContactsProvider = ({ children }: { children: ReactNode }) => {
-  const [contacts, setContacts] = useState<Contact[]>(INITIAL_CONTACTS)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const { user } = useAuth()
 
-  const addContact = (
-    data: Omit<
-      Contact,
-      'id' | 'createdAt' | 'lastActivityDate' | 'companyName'
-    > & { companyName?: string },
-  ) => {
-    const newContact: Contact = {
-      ...data,
-      id: Math.random().toString(36).substring(2, 9),
-      createdAt: new Date(),
-      lastActivityDate: new Date(),
-      companyName: data.companyName || 'ADAPTΔCRM',
+  const fetchContacts = async () => {
+    if (!user) return
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (!error && data) {
+      setContacts(data.map(mapDbToContact))
     }
-    setContacts((prev) => [newContact, ...prev])
   }
 
-  const updateContact = (
-    id: string,
-    data: Partial<Omit<Contact, 'id' | 'createdAt'>>,
-  ) => {
+  useEffect(() => {
+    if (!user) {
+      setContacts([])
+      return
+    }
+
+    fetchContacts()
+
+    const channel = supabase
+      .channel('public:contacts')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contacts' },
+        () => {
+          fetchContacts()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user])
+
+  const addContact = async (data: Partial<Contact>) => {
+    const { error } = await supabase.from('contacts').insert({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      company_name: data.companyName,
+      status: data.status || 'subscriber',
+      cpf: data.cpf,
+      cep: data.cep,
+      produto_interesse: data.produto_interesse,
+      modelo_captura: data.modelo_captura,
+      observacoes: data.observacoes,
+      proprietario_id: user?.id,
+    })
+    if (error) console.error(error)
+  }
+
+  const updateContact = async (id: string, data: Partial<Contact>) => {
+    // Optimistic UI update
     setContacts((prev) =>
-      prev.map((contact) =>
-        contact.id === id ? { ...contact, ...data } : contact,
-      ),
+      prev.map((c) => (c.id === id ? { ...c, ...(data as any) } : c)),
     )
+
+    const updateData: any = {}
+    if (data.firstName !== undefined) updateData.first_name = data.firstName
+    if (data.lastName !== undefined) updateData.last_name = data.lastName
+    if (data.email !== undefined) updateData.email = data.email
+    if (data.phone !== undefined) updateData.phone = data.phone
+    if (data.companyName !== undefined)
+      updateData.company_name = data.companyName
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.cpf !== undefined) updateData.cpf = data.cpf
+    if (data.cep !== undefined) updateData.cep = data.cep
+    if (data.produto_interesse !== undefined)
+      updateData.produto_interesse = data.produto_interesse
+    if (data.modelo_captura !== undefined)
+      updateData.modelo_captura = data.modelo_captura
+    if (data.observacoes !== undefined)
+      updateData.observacoes = data.observacoes
+
+    const { error } = await supabase
+      .from('contacts')
+      .update(updateData)
+      .eq('id', id)
+    if (error) {
+      console.error(error)
+      fetchContacts() // revert on error
+    }
   }
 
-  const deleteContact = (id: string) => {
-    setContacts((prev) => prev.filter((contact) => contact.id !== id))
+  const deleteContact = async (id: string) => {
+    const { error } = await supabase.from('contacts').delete().eq('id', id)
+    if (error) console.error(error)
   }
 
   return (
     <ContactsContext.Provider
-      value={{ contacts, addContact, updateContact, deleteContact }}
+      value={{
+        contacts,
+        addContact,
+        updateContact,
+        deleteContact,
+        refreshContacts: fetchContacts,
+      }}
     >
       {children}
     </ContactsContext.Provider>
   )
 }
 
-const useContactsStore = () => {
+export const useContactsStore = () => {
   const context = useContext(ContactsContext)
   if (!context) {
     throw new Error('useContactsStore must be used within a ContactsProvider')

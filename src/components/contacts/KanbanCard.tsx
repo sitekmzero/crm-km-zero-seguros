@@ -16,21 +16,23 @@ interface KanbanCardProps {
   contact: Contact
   onDragStart: (id: string) => void
   onViewJourney?: (contact: Contact) => void
+  onViewDetails?: (contact: Contact) => void
 }
 
 export function KanbanCard({
   contact,
   onDragStart,
   onViewJourney,
+  onViewDetails,
 }: KanbanCardProps) {
-  // Mock activity selection based on contact ID for variety
   const getActivitySnippet = (id: string) => {
     const activities = [
-      { text: 'Chamada há 5 horas', icon: Phone, highlight: 'Chamada' },
-      { text: 'Reunião em 3 dias', icon: Calendar, highlight: 'Reunião' },
-      { text: 'Tarefa há 3 horas', icon: CheckSquare, highlight: 'Tarefa' },
+      { text: 'Novo contato recebido', icon: Sparkles, highlight: 'Novo' },
+      { text: 'Aguardando contato', icon: Phone, highlight: 'Aguardando' },
+      { text: 'Tarefa pendente', icon: CheckSquare, highlight: 'Tarefa' },
     ]
-    const index = parseInt(id.charCodeAt(0).toString()) % activities.length
+    const index =
+      parseInt(id.replace(/\D/g, '') || '0') % activities.length || 0
     return activities[index]
   }
 
@@ -40,73 +42,60 @@ export function KanbanCard({
     <div
       draggable
       onDragStart={() => onDragStart(contact.id)}
-      className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group animate-fade-in"
+      className="bg-card p-4 rounded-lg shadow-sm border border-border cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/30 transition-all group animate-fade-in"
     >
       <div className="flex flex-col space-y-3">
-        {/* Header: Name */}
         <div>
-          <h4 className="font-bold text-[#1e293b] text-[15px] leading-tight hover:text-primary cursor-pointer transition-colors">
+          <h4
+            className="font-bold text-foreground text-[15px] leading-tight hover:text-primary cursor-pointer transition-colors"
+            onClick={() => onViewDetails?.(contact)}
+          >
             {contact.firstName} {contact.lastName}
           </h4>
+          {contact.produto_interesse && (
+            <span className="text-[10px] uppercase font-bold text-primary tracking-wider mt-1 block">
+              {contact.produto_interesse}
+            </span>
+          )}
         </div>
 
-        {/* Last Contact */}
         <p className="text-xs text-muted-foreground">
-          Último contato:{' '}
-          {format(new Date(contact.lastActivityDate), 'dd/MM/yyyy')}
+          Criado em: {format(new Date(contact.createdAt), 'dd/MM/yyyy')}
         </p>
 
-        <div className="border-t border-gray-100 my-2" />
+        <div className="border-t border-border my-2" />
 
-        {/* Company / Brand */}
-        <div className="flex items-center gap-2">
-          <img
-            src={`https://img.usecurling.com/i?q=${contact.companyName}&size=32`}
-            alt={contact.companyName}
-            className="w-4 h-4 object-contain opacity-70"
-            onError={(e) => {
-              // Fallback if image fails
-              ;(e.target as HTMLImageElement).style.display = 'none'
-            }}
-          />
-          <span className="text-xs text-muted-foreground font-medium underline decoration-gray-300 underline-offset-2">
-            {contact.companyName}
-          </span>
-        </div>
-
-        {/* Activity Snippet */}
-        <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-1">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+          <activity.icon className="h-3.5 w-3.5" />
           <span
             className={cn(
-              'underline decoration-dotted',
-              activity.highlight === 'Chamada' &&
-                'decoration-green-400 text-green-700',
-              activity.highlight === 'Reunião' &&
-                'decoration-blue-400 text-blue-700',
-              activity.highlight === 'Tarefa' &&
-                'decoration-orange-400 text-orange-700',
+              'font-medium',
+              activity.highlight === 'Novo' && 'text-primary',
+              activity.highlight === 'Aguardando' && 'text-blue-600',
+              activity.highlight === 'Tarefa' && 'text-orange-600',
             )}
           >
             {activity.highlight}
           </span>
-          <span className="text-muted-foreground">
+          <span className="truncate">
             {activity.text.replace(activity.highlight, '').trim()}
           </span>
         </div>
 
-        {/* Footer Actions */}
         <div className="flex items-center justify-end gap-1 mt-2 pt-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-gray-700"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
+            onClick={() => onViewDetails?.(contact)}
+            title="Ver Detalhes"
           >
             <PanelRight className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
             onClick={() => onViewJourney?.(contact)}
             title="Ver Jornada do Cliente"
           >
@@ -115,16 +104,9 @@ export function KanbanCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-gray-700"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <Mail className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-gray-700"
-          >
-            <FileEdit className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>

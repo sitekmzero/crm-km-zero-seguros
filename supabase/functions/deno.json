@@ -1,0 +1,21 @@
+{
+  "_versions": {
+    "functions": 3,
+    "monitor-quotation-errors": 3,
+    "notify-admin-reactivation": 3,
+    "notify-client-status": 3,
+    "notify-lead": 4,
+    "notify-new-candidate": 3,
+    "send-admin-notification": 3,
+    "validate-captcha": 3,
+    "validate-password": 3,
+    "processar-lead": 3,
+    "submitForm": 2,
+    "send-welcome-email": 1,
+    "process-renewals": 1,
+    "crisp-webhook": 1,
+    "enviar-otp": 1,
+    "notificar-venda": 1,
+    "daily-followup": 1
+  }
+}

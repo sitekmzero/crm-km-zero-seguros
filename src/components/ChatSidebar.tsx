@@ -3,90 +3,119 @@ import {
   Building2,
   Briefcase,
   Ticket,
-  ShoppingCart,
-  ListFilter,
-  Inbox,
-  Phone,
-  CheckSquare,
-  Book,
+  LayoutDashboard,
   FileText,
-  Scissors,
-  ChevronDown,
+  Settings as SettingsIcon,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 
 export function ChatSidebar({ className }: { className?: string }) {
+  const location = useLocation()
+  const { signOut } = useAuth()
+
   return (
     <aside
       className={cn(
-        'flex flex-col h-full bg-[#FAFAFA] border-r border-border w-[240px]',
+        'flex flex-col h-full bg-sidebar border-r border-sidebar-border w-[240px] text-sidebar-foreground',
         className,
       )}
     >
-      {/* CRM Header */}
-      <div className="p-4 flex items-center gap-3 h-16 border-b border-border flex-shrink-0 bg-[#FAFAFA]">
-        <div className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-          ADAPTΔCRM
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </div>
+      <div className="p-4 flex items-center justify-center h-20 border-b border-sidebar-border flex-shrink-0 bg-sidebar-accent/30">
+        <img
+          src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Imagem/Logo%20km%20zero%20fundo%20branco%20transparente%20site.svg"
+          alt="Km Zero Seguros"
+          className="h-10 w-auto object-contain transition-transform hover:scale-105 cursor-pointer"
+        />
       </div>
 
       <ScrollArea className="flex-1 py-4">
-        <div className="px-2 space-y-1">
-          <NavItem icon={Users} label="Contatos" active />
-          <NavItem icon={Building2} label="Empresas" />
-          <NavItem icon={Briefcase} label="Negócios" />
-          <NavItem icon={Ticket} label="Tickets" />
-          <NavItem icon={ShoppingCart} label="Pedidos" />
+        <div className="px-3 space-y-1">
+          <NavItem
+            to="/"
+            icon={Users}
+            label="Contatos"
+            active={location.pathname === '/'}
+          />
+          <NavItem
+            to="/dashboard"
+            icon={LayoutDashboard}
+            label="Dashboard"
+            active={location.pathname === '/dashboard'}
+          />
+          <NavItem
+            to="/quotations"
+            icon={Ticket}
+            label="Cotações"
+            active={location.pathname === '/quotations'}
+          />
+          <NavItem
+            to="/reports"
+            icon={FileText}
+            label="Relatórios"
+            active={location.pathname === '/reports'}
+          />
 
-          <div className="my-4 border-t border-border/50 mx-2" />
+          <div className="my-4 border-t border-sidebar-border mx-2" />
 
-          <NavItem icon={ListFilter} label="Segmentos (listas)" />
-          <NavItem icon={Inbox} label="Caixa de entrada" />
-          <NavItem icon={Phone} label="Chamadas" />
-          <NavItem icon={CheckSquare} label="Tarefas" />
-
-          <div className="my-4 border-t border-border/50 mx-2" />
-
-          <NavItem icon={Book} label="Manuais de atividades" />
-          <NavItem icon={FileText} label="Modelos de mensagens" />
-          <NavItem icon={Scissors} label="Snippets" />
+          <NavItem
+            to="/settings"
+            icon={SettingsIcon}
+            label="Configurações"
+            active={location.pathname === '/settings'}
+          />
         </div>
       </ScrollArea>
 
-      {/* Bottom Branding */}
-      <div className="p-4 border-t border-border text-xs text-muted-foreground text-center flex-shrink-0 bg-[#FAFAFA]">
-        ADAPTΔONE²⁶ CRM v2.0
+      <div className="p-4 border-t border-sidebar-border">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent hover:text-destructive"
+          onClick={signOut}
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="font-medium">Sair</span>
+        </Button>
       </div>
     </aside>
   )
 }
 
 function NavItem({
+  to,
   icon: Icon,
   label,
   active,
 }: {
+  to: string
   icon: any
   label: string
   active?: boolean
 }) {
   return (
     <Button
+      asChild
       variant="ghost"
       className={cn(
-        'w-full justify-start gap-3 h-9 font-medium transition-all duration-200 px-3',
+        'w-full justify-start gap-3 h-10 font-medium transition-all duration-200 px-3',
         active
-          ? 'bg-primary/10 text-primary hover:bg-primary/15 rounded-md'
-          : 'text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md',
+          ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm hover:bg-sidebar-primary/90'
+          : 'text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md',
       )}
     >
-      <Icon
-        className={cn('h-4 w-4', active ? 'text-primary' : 'text-gray-400')}
-      />
-      <span className="truncate">{label}</span>
+      <Link to={to}>
+        <Icon
+          className={cn(
+            'h-4 w-4',
+            active ? 'text-sidebar-primary-foreground' : 'opacity-70',
+          )}
+        />
+        <span className="truncate">{label}</span>
+      </Link>
     </Button>
   )
 }

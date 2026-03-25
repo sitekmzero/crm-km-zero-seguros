@@ -27,15 +27,21 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import useContactsStore, { Contact } from '@/stores/useContactsStore'
 import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'Nome é obrigatório'),
-  lastName: z.string().min(1, 'Sobrenome é obrigatório'),
+  lastName: z.string().optional(),
   email: z.string().email('E-mail inválido'),
   phone: z.string().min(1, 'Telefone é obrigatório'),
   companyName: z.string().optional(),
+  cpf: z.string().optional(),
+  cep: z.string().optional(),
+  produto_interesse: z.string().optional(),
+  modelo_captura: z.string().optional(),
+  observacoes: z.string().optional(),
   status: z.enum(
     [
       'subscriber',
@@ -73,7 +79,12 @@ export function ContactFormDialog({
       email: '',
       phone: '',
       companyName: '',
-      status: 'lead',
+      cpf: '',
+      cep: '',
+      produto_interesse: '',
+      modelo_captura: '',
+      observacoes: '',
+      status: 'subscriber',
     },
   })
 
@@ -87,6 +98,11 @@ export function ContactFormDialog({
           phone: contactToEdit.phone,
           status: contactToEdit.status,
           companyName: contactToEdit.companyName || '',
+          cpf: contactToEdit.cpf || '',
+          cep: contactToEdit.cep || '',
+          produto_interesse: contactToEdit.produto_interesse || '',
+          modelo_captura: contactToEdit.modelo_captura || '',
+          observacoes: contactToEdit.observacoes || '',
         })
       } else {
         form.reset({
@@ -94,22 +110,27 @@ export function ContactFormDialog({
           lastName: '',
           email: '',
           phone: '',
-          status: 'lead',
+          status: 'subscriber',
           companyName: '',
+          cpf: '',
+          cep: '',
+          produto_interesse: '',
+          modelo_captura: '',
+          observacoes: '',
         })
       }
     }
   }, [open, contactToEdit, form])
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (contactToEdit) {
-      updateContact(contactToEdit.id, values)
+      await updateContact(contactToEdit.id, values)
       toast({
         title: 'Contato atualizado',
-        description: 'As informações do contato foram salvas com sucesso.',
+        description: 'As informações foram salvas com sucesso.',
       })
     } else {
-      addContact(values)
+      await addContact(values)
       toast({
         title: 'Contato criado',
         description: 'O novo contato foi adicionado à sua lista.',
@@ -120,15 +141,15 @@ export function ContactFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {contactToEdit ? 'Editar contato' : 'Adicionar contato'}
+            {contactToEdit ? 'Editar contato' : 'Adicionar novo contato'}
           </DialogTitle>
           <DialogDescription>
             {contactToEdit
-              ? 'Faça alterações nas informações do contato abaixo.'
-              : 'Preencha os dados abaixo para adicionar um novo contato.'}
+              ? 'Faça alterações nas informações abaixo.'
+              : 'Preencha os dados do novo prospect ou cliente.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -141,11 +162,7 @@ export function ContactFormDialog({
                   <FormItem>
                     <FormLabel>Nome</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="João"
-                        className="rounded-[28px]"
-                        {...field}
-                      />
+                      <Input placeholder="João" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,12 +175,168 @@ export function ContactFormDialog({
                   <FormItem>
                     <FormLabel>Sobrenome</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Silva"
-                        className="rounded-[28px]"
-                        {...field}
-                      />
+                      <Input placeholder="Silva" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input placeholder="joao@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(11) 99999-9999" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cpf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF</FormLabel>
+                    <FormControl>
+                      <Input placeholder="000.000.000-00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cep"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CEP</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00000-000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="produto_interesse"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Produto de Interesse</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Seguro Auto">Seguro Auto</SelectItem>
+                        <SelectItem value="Seguro Empresarial">
+                          Seguro Empresarial
+                        </SelectItem>
+                        <SelectItem value="Consórcio">Consórcio</SelectItem>
+                        <SelectItem value="Financiamento">
+                          Financiamento
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="modelo_captura"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Modelo de Captura</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Cotação Real">
+                          Cotação Real
+                        </SelectItem>
+                        <SelectItem value="Vapt-Vupt">Vapt-Vupt</SelectItem>
+                        <SelectItem value="Gamified">Gamified</SelectItem>
+                        <SelectItem value="Manual">Manual (Interno)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Empresa</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Opcional" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status (Pipeline)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o estágio" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="subscriber">Assinante</SelectItem>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="marketing_qualified_lead">
+                          MQL
+                        </SelectItem>
+                        <SelectItem value="sales_qualified_lead">
+                          SQL
+                        </SelectItem>
+                        <SelectItem value="opportunity">
+                          Oportunidade
+                        </SelectItem>
+                        <SelectItem value="customer">Cliente</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -172,14 +345,13 @@ export function ContactFormDialog({
 
             <FormField
               control={form.control}
-              name="email"
+              name="observacoes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="joao.silva@exemplo.com"
-                      className="rounded-[28px]"
+                    <Textarea
+                      placeholder="Notas adicionais sobre o cliente..."
                       {...field}
                     />
                   </FormControl>
@@ -188,84 +360,19 @@ export function ContactFormDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número de telefone</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="(11) 99999-9999"
-                      className="rounded-[28px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="companyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Empresa (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Empresa XYZ"
-                      className="rounded-[28px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status do lead</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="rounded-[28px]">
-                        <SelectValue placeholder="Selecione um status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="subscriber">Assinante</SelectItem>
-                      <SelectItem value="lead">Lead</SelectItem>
-                      <SelectItem value="marketing_qualified_lead">
-                        MQL
-                      </SelectItem>
-                      <SelectItem value="sales_qualified_lead">SQL</SelectItem>
-                      <SelectItem value="opportunity">Oportunidade</SelectItem>
-                      <SelectItem value="customer">Cliente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="rounded-[28px]"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="rounded-[28px]">
-                {contactToEdit ? 'Salvar' : 'Criar contato'}
+              <Button
+                type="submit"
+                className="font-semibold text-primary-foreground"
+              >
+                {contactToEdit ? 'Salvar Alterações' : 'Criar Contato'}
               </Button>
             </DialogFooter>
           </form>

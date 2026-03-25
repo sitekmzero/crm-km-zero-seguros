@@ -1,41 +1,49 @@
 import { Outlet } from 'react-router-dom'
 import { ChatSidebar } from '@/components/ChatSidebar'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import logoImg from '@/assets/image.png'
+import { RealtimeNotifications } from '@/components/RealtimeNotifications'
 
 export default function Layout() {
   return (
-    <div className="flex min-h-screen w-full bg-[#FDFDFD] font-sans selection:bg-primary/10 selection:text-primary">
-      {/* Desktop Navigation - CRM Sidebar only */}
+    <div className="flex min-h-screen w-full bg-background font-sans selection:bg-primary/20 selection:text-primary">
+      <RealtimeNotifications />
+
+      {/* Desktop Navigation */}
       <div className="hidden md:block h-screen sticky top-0">
         <ChatSidebar />
       </div>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 left-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center">
           <img
-            src={logoImg}
-            alt="ADAPTΔONE²⁶"
-            className="h-5 w-auto object-contain"
+            src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Imagem/Logo%20km%20zero%20fundo%20branco%20transparente%20site.svg"
+            alt="Km Zero"
+            className="h-8 w-auto object-contain"
           />
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="text-foreground">
+              <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[240px]">
+          <SheetContent side="left" className="p-0 w-[260px] border-none">
+            <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
             <ChatSidebar className="w-full border-none" />
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
+      <main className="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0 bg-background">
         <Outlet />
       </main>
     </div>

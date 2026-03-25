@@ -8,9 +8,14 @@ import { JourneyModal } from './JourneyModal'
 interface ContactsBoardProps {
   contacts: Contact[]
   onEdit: (contact: Contact) => void
+  onViewDetails?: (contact: Contact) => void
 }
 
-export function ContactsBoard({ contacts, onEdit }: ContactsBoardProps) {
+export function ContactsBoard({
+  contacts,
+  onEdit,
+  onViewDetails,
+}: ContactsBoardProps) {
   const { updateContact } = useContactsStore()
   const { toast } = useToast()
   const [draggedContactId, setDraggedContactId] = useState<string | null>(null)
@@ -19,11 +24,8 @@ export function ContactsBoard({ contacts, onEdit }: ContactsBoardProps) {
   const columns: { id: ContactStatus; title: string }[] = [
     { id: 'subscriber', title: 'Assinante' },
     { id: 'lead', title: 'Lead' },
-    {
-      id: 'marketing_qualified_lead',
-      title: 'Lead qualificado para marketing',
-    },
-    { id: 'sales_qualified_lead', title: 'Lead qualificado para venda' },
+    { id: 'marketing_qualified_lead', title: 'MQL' },
+    { id: 'sales_qualified_lead', title: 'SQL' },
     { id: 'opportunity', title: 'Oportunidade' },
     { id: 'customer', title: 'Cliente' },
   ]
@@ -32,26 +34,22 @@ export function ContactsBoard({ contacts, onEdit }: ContactsBoardProps) {
     setDraggedContactId(id)
   }
 
-  const handleDrop = (status: ContactStatus) => {
+  const handleDrop = async (status: ContactStatus) => {
     if (draggedContactId) {
-      // Optimistic update logic could be here, but store update is fast enough
-      updateContact(draggedContactId, { status })
+      await updateContact(draggedContactId, { status })
       toast({
         title: 'Status atualizado',
-        description: 'O status do contato foi atualizado com sucesso.',
+        description:
+          'O status do contato foi atualizado com sucesso no pipeline.',
         duration: 2000,
       })
       setDraggedContactId(null)
     }
   }
 
-  const handleViewJourney = (contact: Contact) => {
-    setViewingContact(contact)
-  }
-
   return (
     <>
-      <div className="flex h-full w-full overflow-x-auto pb-4 items-stretch min-h-[600px] bg-[#fdfdfd]">
+      <div className="flex h-full w-full overflow-x-auto pb-4 items-stretch min-h-[600px] bg-background">
         {columns.map((col) => (
           <KanbanColumn
             key={col.id}
@@ -60,10 +58,10 @@ export function ContactsBoard({ contacts, onEdit }: ContactsBoardProps) {
             contacts={contacts.filter((c) => c.status === col.id)}
             onDrop={handleDrop}
             onDragStart={handleDragStart}
-            onViewJourney={handleViewJourney}
+            onViewJourney={setViewingContact}
+            onViewDetails={onViewDetails}
           />
         ))}
-        {/* Spacer for right padding */}
         <div className="w-4 flex-shrink-0" />
       </div>
 
