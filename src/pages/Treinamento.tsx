@@ -22,6 +22,7 @@ import {
   Lightbulb,
   Workflow,
   Printer,
+  Mail,
 } from 'lucide-react'
 import {
   trainingModules,
@@ -223,6 +224,24 @@ export default function Treinamento() {
 
             <TabsContent value="praticas" className="mt-6">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Link
+                  to="/treinamento/exemplos-templates"
+                  className="block group"
+                >
+                  <Card className="h-full border-border shadow-sm hover:border-[#C8A24A] hover:shadow-md transition-all bg-white">
+                    <CardContent className="p-6">
+                      <Mail className="h-8 w-8 text-[#0B1F3B] mb-4 group-hover:scale-110 transition-transform" />
+                      <h3 className="font-bold text-[#0B1F3B] text-lg mb-2">
+                        Galeria de Templates Oficiais
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Modelos de e-mail de alta conversão pré-configurados
+                        pela diretoria prontos para uso em suas abordagens
+                        diárias.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
                 {bestPractices.map((bp) => (
                   <Link
                     key={bp.id}

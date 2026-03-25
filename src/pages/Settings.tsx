@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { UserManagement } from '@/components/settings/UserManagement'
+import { EmailTemplatesManagement } from '@/components/settings/EmailTemplatesManagement'
 import { Switch } from '@/components/ui/switch'
 
 export default function Settings() {
@@ -24,8 +24,6 @@ export default function Settings() {
   const [n8nUrl, setN8nUrl] = useState('')
   const [pipedriveKey, setPipedriveKey] = useState('')
   const [specialties, setSpecialties] = useState('')
-  const [templates, setTemplates] = useState<any[]>([])
-  const [editingTemplate, setEditingTemplate] = useState<any>(null)
 
   // Admin Company Config
   const [companyInfo, setCompanyInfo] = useState({
@@ -41,7 +39,6 @@ export default function Settings() {
     if (user) {
       fetchVendorConfig()
       if (isAdmin) {
-        fetchTemplates()
         fetchCompanyConfig()
       }
     }
@@ -66,14 +63,6 @@ export default function Settings() {
       .select('*')
       .single()
     if (data) setCompanyInfo(data)
-  }
-
-  const fetchTemplates = async () => {
-    const { data } = await supabase
-      .from('email_templates')
-      .select('*')
-      .order('created_at')
-    if (data) setTemplates(data)
   }
 
   const saveIntegrations = async () => {
@@ -125,7 +114,7 @@ export default function Settings() {
           {isAdmin && (
             <>
               <TabsTrigger value="empresa">Dados da Empresa</TabsTrigger>
-              <TabsTrigger value="templates">Templates (E-mail)</TabsTrigger>
+              <TabsTrigger value="templates">Templates de E-mail</TabsTrigger>
               <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             </>
           )}
@@ -287,8 +276,9 @@ export default function Settings() {
             </TabsContent>
 
             <TabsContent value="templates" className="space-y-6">
-              {/* Retido da versão original para não passar do limite, mesma lógica */}
+              <EmailTemplatesManagement />
             </TabsContent>
+
             <TabsContent value="usuarios" className="space-y-6">
               <UserManagement />
             </TabsContent>

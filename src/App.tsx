@@ -29,6 +29,7 @@ import TreinamentoModulo from './pages/TreinamentoModulo'
 import TreinamentoRelatorio from './pages/TreinamentoRelatorio'
 import TreinamentoPratica from './pages/TreinamentoPratica'
 import TreinamentoFluxo from './pages/TreinamentoFluxo'
+import ExemplosTemplates from './pages/ExemplosTemplates'
 import Diagnostico from './pages/Diagnostico'
 import { useEffect } from 'react'
 
@@ -94,6 +95,10 @@ const App = () => (
                 <Route
                   path="/treinamento/relatorio"
                   element={<TreinamentoRelatorio />}
+                />
+                <Route
+                  path="/treinamento/exemplos-templates"
+                  element={<ExemplosTemplates />}
                 />
                 {/* Redirects para rotas requeridas sem componentes isolados */}
                 <Route
