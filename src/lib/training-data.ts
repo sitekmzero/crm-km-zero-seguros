@@ -1,413 +1,391 @@
 export const trainingModules = [
   {
-    id: 'iniciante-passos',
-    title: 'Iniciante: Primeiros Passos',
+    id: 'iniciante',
+    title: 'Iniciante: Dominando o Básico',
     level: 'Iniciante',
-    duration: '15 min',
+    duration: '45 min',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     content: `
-      <h3>Bem-vindo ao CRM Km Zero!</h3>
-      <p>Neste módulo, você aprenderá o básico para acessar e navegar no sistema de forma segura.</p>
-      <h4>Passo a Passo: Login</h4>
-      <ol>
-        <li>Acesse o endereço oficial do CRM no seu navegador.</li>
-        <li>Insira seu e-mail corporativo.</li>
-        <li>Digite sua senha (definida através do convite que você recebeu por e-mail).</li>
-        <li>Clique no botão "Entrar".</li>
-      </ol>
-      <h4>Dicas de Segurança</h4>
-      <ul>
-        <li>Nunca compartilhe sua senha com colegas.</li>
-        <li>Sempre faça logout (sair) ao utilizar computadores compartilhados.</li>
-      </ul>
+      <h3>Bem-vindo ao CRM!</h3>
+      <p>Nesta trilha inicial, você garantirá autonomia total sobre o cadastro e gestão dos seus clientes. Dominar o básico é o primeiro passo para o sucesso em vendas na Km Zero.</p>
+      
+      <h4>1. Estrutura do Sistema</h4>
+      <p>O CRM é dividido em módulos principais: Contatos, Cotações, Dashboard e Documentos. A navegação ocorre pelo menu lateral escuro, que pode ser expandido ou retraído.</p>
+      
+      <h4>2. Gestão de Contatos</h4>
+      <p>Aprenda a cadastrar clientes corretamente. Use o botão <strong>Novo Contato</strong>. Preencha Nome, Telefone e E-mail. <strong>Dica de Ouro:</strong> Sempre preencha o CPF para evitar duplicatas futuras.</p>
+      
+      <h4>3. O Pipeline Kanban</h4>
+      <p>Entenda as 6 fases: Assinante &gt; Lead &gt; MQL &gt; SQL &gt; Oportunidade &gt; Cliente. Arraste os cards para avançar a negociação. Cores indicam a temperatura do lead.</p>
+      
+      <h4>4. Suas Primeiras Cotações</h4>
+      <p>Crie orçamentos formais vinculados aos clientes. Use o formato Vapt-Vupt para velocidade, ou Cotação Real para detalhamento financeiro que reflete no seu Dashboard.</p>
+
+      <h4>5. Interações Básicas</h4>
+      <p>Registre todas as suas chamadas, emails e reuniões na aba "Interações" dentro do perfil do cliente. Histórico é dinheiro.</p>
     `,
     questions: [
       {
-        question:
-          'Qual é a forma recomendada de acessar o CRM pela primeira vez?',
+        question: 'Qual campo é crucial para evitar contatos duplicados?',
+        options: ['Nome', 'Telefone', 'CPF', 'Profissão'],
+        correctAnswer: 2,
+      },
+      {
+        question: 'O que o Kanban representa no CRM?',
         options: [
-          'Pedindo a senha do colega',
-          'Através do link de convite recebido no e-mail',
-          'Criando uma conta com e-mail pessoal',
-          'Acessando o site público da Km Zero',
+          'A folha de pagamento',
+          'O funil visual de vendas e negociação',
+          'A agenda de feriados',
+          'A central de emails',
         ],
         correctAnswer: 1,
       },
       {
-        question: 'O que você deve fazer ao usar um computador compartilhado?',
-        options: [
-          'Salvar a senha no navegador',
-          'Deixar a aba aberta',
-          'Fazer logout (Sair) ao terminar',
-          'Desligar o monitor',
-        ],
+        question: 'Qual estágio vem logo após "SQL" no funil padrão?',
+        options: ['Cliente', 'Lead', 'Oportunidade', 'Assinante'],
         correctAnswer: 2,
       },
       {
         question:
-          'Quem possui acesso à tela de configurações globais e auditoria?',
+          'Qual modelo de cotação usar para enviar um orçamento rápido pelo WhatsApp?',
         options: [
-          'Apenas Administradores',
-          'Apenas Vendedores',
-          'Qualquer usuário',
-          'Clientes',
+          'Real Completa',
+          'Vapt-Vupt',
+          'Gamified',
+          'Nenhuma das opções',
         ],
-        correctAnswer: 0,
-      },
-      {
-        question: 'Como a senha inicial é definida?',
-        options: [
-          'O RH envia por WhatsApp',
-          'O sistema gera uma senha aleatória',
-          'Através do fluxo de redefinição/convite no seu e-mail',
-          'A senha padrão é 123456',
-        ],
-        correctAnswer: 2,
+        correctAnswer: 1,
       },
       {
         question:
-          'Qual navegador é o mais recomendado para usar o CRM Km Zero?',
-        options: ['Internet Explorer', 'Google Chrome', 'Opera', 'Safari'],
+          'Como registrar que você enviou uma mensagem importante ao lead?',
+        options: [
+          'Anotar em um post-it',
+          'Criar uma Nota Interna na aba Interações',
+          'Mudar o nome do lead',
+          'Excluir o contato',
+        ],
         correctAnswer: 1,
       },
     ],
   },
   {
-    id: 'iniciante-contatos',
-    title: 'Iniciante: Gestão de Contatos',
-    level: 'Iniciante',
-    duration: '20 min',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    content: `
-      <h3>Criando e Gerenciando Contatos</h3>
-      <p>Aprenda a adicionar novos leads manualmente e editar suas informações.</p>
-      <h4>Como Criar:</h4>
-      <ol>
-        <li>No menu principal (Dashboard ou Contatos), clique em "Adicionar Contato".</li>
-        <li>Preencha os campos obrigatórios (Nome, E-mail ou Telefone).</li>
-        <li>Recomendamos sempre preencher o CPF para validações futuras de apólices.</li>
-        <li>Clique em "Salvar".</li>
-      </ol>
-      <p>Você pode buscar contatos pela barra superior usando nome, e-mail ou CPF.</p>
-    `,
-    questions: [
-      {
-        question:
-          'Quais são os campos mínimos recomendados ao criar um contato?',
-        options: [
-          'Apenas o Nome',
-          'Nome e pelo menos E-mail ou Telefone',
-          'Apenas o CPF',
-          'Endereço completo',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        question: 'Por que o preenchimento do CPF é importante?',
-        options: [
-          'Para emitir nota fiscal de comissão',
-          'Para validações futuras e emissão de apólices reais',
-          'Apenas para controle interno',
-          'Não é importante',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        question: 'Como você pode encontrar um contato rapidamente?',
-        options: [
-          'Rolando a tela até achar',
-          'Pedindo para o administrador',
-          'Usando a barra de busca no topo da tela',
-          'Exportando para Excel',
-        ],
-        correctAnswer: 2,
-      },
-      {
-        question: 'Se um cliente mudar de telefone, o que você deve fazer?',
-        options: [
-          'Criar um novo contato',
-          'Editar o contato existente',
-          'Excluir e criar de novo',
-          'Anotar no caderno',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        question: 'Onde fica o botão de "Adicionar Contato"?',
-        options: [
-          'Dentro das Configurações',
-          'No canto inferior esquerdo',
-          'No topo da tela de Contatos/Kanban',
-          'No relatório em PDF',
-        ],
-        correctAnswer: 2,
-      },
-    ],
-  },
-  {
-    id: 'intermediario-kanban',
-    title: 'Intermediário: Pipeline e Kanban',
+    id: 'intermediario',
+    title: 'Intermediário: Automação e Velocidade',
     level: 'Intermediário',
-    duration: '25 min',
+    duration: '60 min',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     content: `
-      <h3>O Coração das Vendas</h3>
-      <p>O Kanban visualiza a jornada do seu cliente em 6 etapas cruciais:</p>
-      <ul>
-        <li><strong>Assinante:</strong> Baixou material, sem intenção de compra.</li>
-        <li><strong>Lead:</strong> Pediu contato.</li>
-        <li><strong>MQL / SQL:</strong> Qualificado, estamos cotando.</li>
-        <li><strong>Oportunidade:</strong> Proposta enviada, negociando.</li>
-        <li><strong>Cliente:</strong> Venda fechada!</li>
-      </ul>
-      <p>Arraste e solte os cards para avançar. Isso dispara automações (como e-mails) nos bastidores.</p>
+      <h3>Trabalhe Mais Inteligente</h3>
+      <p>Agora que você domina o cadastro, vamos usar o sistema para economizar tempo automatizando tarefas repetitivas.</p>
+      
+      <h4>1. Campanhas de E-mail Automáticas</h4>
+      <p>Ao mover um lead para a coluna "Oportunidade", o sistema pode enviar um e-mail pré-formatado automaticamente. Você não precisa redigir do zero.</p>
+      
+      <h4>2. Integração com WhatsApp</h4>
+      <p>Clique no botão verde do WhatsApp no perfil do cliente. O sistema abre a janela de chat já com uma mensagem de saudação pronta, registrando a ação no histórico.</p>
+      
+      <h4>3. Central de Documentos</h4>
+      <p>Guarde CNH, apólices antigas e contratos na aba Docs. Arquivos são indexados pela busca global.</p>
+
+      <h4>4. Lead Scoring e Priorização</h4>
+      <p>O CRM calcula a temperatura do lead de 0 a 100. Foque nos que estão "pegando fogo" (acima de 80) e deixe a automação esquentar os leads frios.</p>
     `,
     questions: [
       {
         question:
-          'O que acontece quando você arrasta um card de estágio no Kanban?',
+          'O que desencadeia um e-mail automático configurado pelo Admin?',
         options: [
-          'O card muda de cor apenas',
-          'Automações (como envio de e-mails) podem ser disparadas',
-          'O cliente é deletado',
-          'Uma cotação é gerada automaticamente',
+          'O aniversário do cliente',
+          'Mover o lead para uma coluna específica no Kanban',
+          'Entrar no sistema',
+          'Imprimir um PDF',
         ],
         correctAnswer: 1,
       },
       {
         question:
-          'Qual estágio indica que o cliente já recebeu a proposta e está negociando?',
-        options: ['Lead', 'Assinante', 'Oportunidade', 'SQL'],
-        correctAnswer: 2,
-      },
-      {
-        question: 'O que o Lead Score verde (80+) indica?',
+          'A integração de WhatsApp requer que você digite a saudação manual sempre?',
         options: [
-          'Que o cliente desistiu',
-          'Que é um lead frio e sem prioridade',
-          'Que é uma prioridade diária com alta chance de fechamento',
-          'Que a apólice venceu',
-        ],
-        correctAnswer: 2,
-      },
-      {
-        question: 'Como registrar que você ligou para o cliente?',
-        options: [
-          'Anotar no papel',
-          'Abrir o card do cliente e adicionar uma Nota Interna na aba Interações',
-          'Mandar um email para o chefe',
-          'Mudar o nome do cliente',
+          'Sim',
+          'Não, o sistema preenche um template automático',
+          'Apenas no mobile',
+          'Apenas se o Admin aprovar',
         ],
         correctAnswer: 1,
       },
       {
-        question: 'O que significa a sigla MQL?',
+        question: 'Onde você deve armazenar a CNH do cliente?',
         options: [
-          'Marketing Qualified Lead',
-          'Many Questions Left',
-          'Minimum Quota Level',
-          'Master Qualification List',
+          'Na aba Docs do perfil do contato',
+          'Nos anexos da cotação',
+          'Enviar para o seu próprio email',
+          'No campo de Observações',
+        ],
+        correctAnswer: 0,
+      },
+      {
+        question: 'O que faz o Lead Score subir rapidamente?',
+        options: [
+          'Deixar o lead parado',
+          'Interagir com o lead e avançar no funil',
+          'Deletar o lead',
+          'Excluir documentos',
+        ],
+        correctAnswer: 1,
+      },
+      {
+        question: 'Como o sistema avisa que uma apólice vai vencer?',
+        options: [
+          'Sino de notificação e quadro vermelho nas Renovações Próximas',
+          'Manda um SMS para o chefe',
+          'Trava o acesso do usuário',
+          'Muda a cor do sistema',
         ],
         correctAnswer: 0,
       },
     ],
   },
   {
-    id: 'intermediario-cotacoes',
-    title: 'Intermediário: Cotações',
-    level: 'Intermediário',
-    duration: '30 min',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    content: `
-      <h3>Emitindo Cotações e Fechando Negócios</h3>
-      <p>Utilize a tela de Cotações para registrar formalmente propostas.</p>
-      <ul>
-        <li>Acesse o menu "Cotações" na lateral.</li>
-        <li>Selecione o Cliente e o Produto (Ex: Seguro Auto).</li>
-        <li>Preencha a placa ou marca/modelo do veículo.</li>
-        <li>Quando o cliente aceitar, atualize o status para "Aceita" — ele se tornará um "Cliente" no Kanban.</li>
-      </ul>
-    `,
-    questions: [
-      {
-        question:
-          'Onde você acessa o sistema para criar uma nova Cotação no CRM?',
-        options: [
-          'Menu lateral esquerdo em "Cotações"',
-          'Menu "Configurações"',
-          'Apenas via WhatsApp',
-          'Na página inicial de Assinantes',
-        ],
-        correctAnswer: 0,
-      },
-      {
-        question:
-          'O que acontece automaticamente quando o status da Cotação é marcado como "Aceita"?',
-        options: [
-          'O CRM envia um boleto',
-          'O contato correspondente avança para as etapas finais do Kanban',
-          'O cadastro é excluído',
-          'A cotação é cancelada',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        question:
-          'Quais dados são essenciais para cotar um Seguro Auto (padrão)?',
-        options: [
-          'Apenas a cor do carro',
-          'Marca, Modelo ou Placa do veículo',
-          'Tamanho do porta-malas',
-          'O nome da mãe do cliente',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        question:
-          'Para gerar inteligência no Dashboard "Por Produto", o que você deve fazer?',
-        options: [
-          'Não preencher o tipo de produto',
-          'Anotar em uma planilha à parte',
-          'Selecionar corretamente o "Tipo de Produto" na Cotação',
-          'Pedir pro cliente mandar um e-mail',
-        ],
-        correctAnswer: 2,
-      },
-      {
-        question:
-          'Você pode ter múltiplas cotações ativas para um mesmo cliente?',
-        options: ['Sim', 'Não', 'Apenas para Consórcios', 'O sistema bloqueia'],
-        correctAnswer: 0,
-      },
-    ],
-  },
-  {
-    id: 'avancado-dashboard',
-    title: 'Avançado: Dashboards e Análise',
+    id: 'avancado',
+    title: 'Avançado: Análise e Gestão',
     level: 'Avançado',
-    duration: '20 min',
+    duration: '50 min',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     content: `
-      <h3>Interpretando Seus Números</h3>
-      <p>A tela Dashboard Estratégico permite que você acompanhe o quão perto está de bater suas metas.</p>
-      <p>Observe a "Taxa de Conversão" para entender quantos leads são necessários para fechar uma venda. Utilize os filtros de período (7, 30 ou 90 dias) para análises sazonais.</p>
+      <h3>Decisões Baseadas em Dados</h3>
+      <p>Explore as funções avançadas para se tornar um consultor analítico ou gestor completo.</p>
+      
+      <h4>1. Interpretando Gráficos no Dashboard</h4>
+      <p>A Taxa de Conversão define sua eficiência. O Ticket Médio ajuda a prever receita. Entenda onde está o gargalo do seu funil.</p>
+      
+      <h4>2. Configurações de Administração e RLS</h4>
+      <p>Admins usam a aba Settings para convidar usuários, ativar Atribuição Round Robin e gerenciar a segurança. O RLS garante que você só veja seus dados.</p>
+      
+      <h4>3. Troubleshooting e Logs</h4>
+      <p>Aprenda a ler logs de auditoria para investigar alterações de status não autorizadas e validar envios de webhook via N8N.</p>
     `,
     questions: [
       {
-        question: 'O que a métrica "Taxa de Conversão" representa?',
+        question: 'Como é calculada a Taxa de Conversão?',
         options: [
-          'O percentual de leads que viraram clientes finais',
-          'O tempo que o cliente demora pra responder',
-          'O valor total das vendas',
-          'O número de e-mails enviados',
-        ],
-        correctAnswer: 0,
-      },
-      {
-        question: 'Como exportar os gráficos para uma reunião?',
-        options: [
-          'Tirando foto com celular',
-          'Clicando em "Exportar PDF" no topo do dashboard',
-          'Não é possível exportar',
-          'Apenas o administrador pode ver os gráficos',
+          'Soma das vendas',
+          '(Clientes Fechados / Total de Leads) x 100',
+          'Número de cotações geradas',
+          'Tempo de resposta médio',
         ],
         correctAnswer: 1,
       },
       {
-        question:
-          'O painel de Alertas de Renovação exibe apólices vencendo em até:',
-        options: ['7 dias', '15 dias', '30 dias', '6 meses'],
-        correctAnswer: 2,
-      },
-      {
-        question: 'Se você é Vendedor, o Dashboard exibe dados de quem?',
+        question: 'Qual a finalidade da atribuição Round Robin?',
         options: [
-          'De todos os vendedores',
-          'Apenas os seus dados e resultados',
-          'Dados fictícios',
-          'Apenas dados de marketing',
+          'Excluir contatos inativos',
+          'Dividir novos leads de forma igualitária entre os vendedores',
+          'Exportar dados para Excel',
+          'Hackear o sistema',
         ],
         correctAnswer: 1,
       },
       {
-        question: 'Para que serve o gráfico "Funil de Vendas"?',
+        question: 'O que o RLS (Row Level Security) garante?',
         options: [
-          'Para ver onde os leads estão travados no processo',
-          'Para calcular comissões',
-          'Para emitir boletos',
-          'Apenas estética',
-        ],
-        correctAnswer: 0,
-      },
-    ],
-  },
-  {
-    id: 'avancado-automações',
-    title: 'Avançado: Automações (Admin)',
-    level: 'Avançado',
-    duration: '30 min',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    content: `
-      <h3>Fazendo o CRM Trabalhar Por Você</h3>
-      <p>O CRM possui gatilhos automáticos. Administradores podem configurar:</p>
-      <ul>
-        <li><strong>Templates de E-mail:</strong> Configurados em /settings. Disparam ao mover colunas no Kanban.</li>
-        <li><strong>Distribuição Round Robin:</strong> Distribui leads novos equitativamente entre os vendedores online.</li>
-        <li><strong>Webhooks (N8N):</strong> Integra com outros sistemas (RD Station, ERPs).</li>
-      </ul>
-    `,
-    questions: [
-      {
-        question: 'O que faz a distribuição "Round Robin"?',
-        options: [
-          'Exclui leads antigos',
-          'Distribui leads de forma equitativa entre a equipe de vendas',
-          'Gera relatórios em PDF',
-          'Envia mensagens no Instagram',
+          'Que o sistema seja rápido',
+          'Que vendedores não vejam leads uns dos outros',
+          'Que a senha seja forte',
+          'Que o email chegue na caixa de entrada',
         ],
         correctAnswer: 1,
       },
       {
-        question: 'Onde o Administrador edita o texto dos e-mails automáticos?',
+        question: 'Onde um Admin configura novos templates de e-mail?',
         options: [
-          'Na tela de Cotações',
+          'Na tela de Login',
+          'No Dashboard',
+          'Na aba Templates dentro de Configurações (/settings)',
           'No Kanban',
-          'Na aba Templates dentro de Configurações',
-          'Pedindo suporte ao TI',
         ],
         correctAnswer: 2,
       },
       {
-        question:
-          'O que aciona o envio de um e-mail com template "Oportunidade"?',
+        question: 'Como preparar o Dashboard para uma apresentação física?',
         options: [
-          'Quando o vendedor loga no sistema',
-          'Quando o contato é movido para a coluna Oportunidade no Kanban',
-          'A cada 24 horas',
-          'Quando o cliente faz aniversário',
+          'Tirar foto da tela',
+          'Usar o botão "Exportar PDF" no topo da página',
+          'Copiar para o Word',
+          'Escrever os números a mão',
         ],
         correctAnswer: 1,
       },
+    ],
+  },
+]
+
+export const bestPractices = [
+  {
+    id: 'bp1',
+    title: 'Gestão Inteligente de Tempo',
+    desc: 'Use o Score Verde (80+) para priorizar ligações diárias. Filtre o Kanban por leads quentes ao chegar no escritório.',
+    fullContent:
+      'A regra de ouro de vendas na Km Zero é focar primeiro em quem quer comprar agora. Chegando no escritório, acesse o Kanban, filtre por Lead Score Maior que 80. Realize suas ligações entre 09:00 e 11:00. Deixe as tarefas administrativas e organização de documentos para o fim da tarde.',
+  },
+  {
+    id: 'bp2',
+    title: 'Qualidade de Leads',
+    desc: 'Sempre exija CPF na entrada de dados manuais. Um CRM limpo evita trabalho duplo na emissão.',
+    fullContent:
+      'Um banco de dados sujo custa vendas. Se o cliente não informar o CPF, use a tática de confirmar os dados mínimos para a primeira Cotação Vapt-Vupt, mas recuse prosseguir para Proposta Formal sem a documentação completa. A aba Docs deve ter no mínimo CNH e Comprovante de Residência.',
+  },
+  {
+    id: 'bp3',
+    title: 'Aumento de Conversão',
+    desc: 'Não deixe leads na mesma coluna por mais de 5 dias. Use o follow-up rápido via WhatsApp para forçar avanço ou arquivamento.',
+    fullContent:
+      'A velocidade de resposta dita a conversão. Leads que ficam estacionados como "MQL" esfriam. Se o contato não responde após 3 tentativas em canais diferentes (Email, WhatsApp, Ligação), mova-o para uma lista de reengajamento (automação) ou feche como "Perdido".',
+  },
+  {
+    id: 'bp4',
+    title: 'Otimização de Automações',
+    desc: 'Deixe as saudações pesadas para o E-mail automático de transição de fase. Foque seu tempo no relacionamento humano.',
+    fullContent:
+      'Você não é um robô. Confie nas Edge Functions do sistema para disparar o "Obrigado pelo seu contato" e o "Seu seguro vence em 30 dias". Use o seu tempo de WhatsApp apenas para tirar objeções específicas e fechar o preço.',
+  },
+  {
+    id: 'bp5',
+    title: 'Análise Diária de Dados',
+    desc: 'Compare sua Taxa de Conversão mensal. Se está caindo, reveja seus scripts de abordagem e o tempo médio de envio de propostas.',
+    fullContent:
+      'No final do dia, gaste 5 minutos no Dashboard. Verifique se o Ticket Médio das suas vendas está cobrindo a sua meta. Utilize o painel de "Renovações Próximas" para garantir dinheiro no bolso antes mesmo de buscar novos leads no mercado.',
+  },
+]
+
+export const visualWorkflows = [
+  {
+    id: 'wf1',
+    title: 'A Jornada Completa do Lead',
+    steps: [
       {
-        question: 'Para que serve o campo N8N Webhook nas configurações?',
-        options: [
-          'Para mudar a cor do sistema',
-          'Para integração avançada com outros softwares e envios de dados',
-          'Para bloquear acessos',
-          'Para calcular juros',
-        ],
-        correctAnswer: 1,
+        name: 'Captação (Assinante)',
+        detail: 'Visitante baixa um material rico no site.',
       },
       {
-        question:
-          'Como o sistema avisa o vendedor sobre uma nova atribuição de lead?',
-        options: [
-          'Envia uma carta via Correios',
-          'O vendedor tem que adivinhar',
-          'Através das notificações em tempo real (sininho no topo)',
-          'Toca um alarme alto no computador',
-        ],
-        correctAnswer: 2,
+        name: 'Conversão (Lead)',
+        detail: 'Pede explicitamente uma cotação na Landing Page.',
+      },
+      {
+        name: 'Qualificação (MQL/SQL)',
+        detail: 'Triagem de dados e confirmação via WhatsApp.',
+      },
+      {
+        name: 'Negociação (Oportunidade)',
+        detail: 'Cotação formal apresentada e em análise.',
+      },
+      {
+        name: 'Fechamento (Cliente)',
+        detail: 'Pagamento efetuado e apólice na aba Docs.',
+      },
+    ],
+  },
+  {
+    id: 'wf2',
+    title: 'Automação de E-mail via Resend',
+    steps: [
+      {
+        name: 'Ação do Vendedor',
+        detail: 'Arrasta o card de Lead para Oportunidade.',
+      },
+      {
+        name: 'Trigger do Banco',
+        detail: 'Supabase detecta o UPDATE na coluna status.',
+      },
+      {
+        name: 'Edge Function',
+        detail: 'O script captura o ID do template correspondente.',
+      },
+      {
+        name: 'Processamento',
+        detail: 'Substitui {{nome}} e envia para a API da Resend.',
+      },
+      {
+        name: 'Log de Sucesso',
+        detail: 'Registro gravado silenciosamente no Histórico.',
+      },
+    ],
+  },
+  {
+    id: 'wf3',
+    title: 'Processo Rigoroso de Emissão',
+    steps: [
+      {
+        name: 'Aprovação Final',
+        detail: 'Cliente dá o OK no preço e envia o PIX/Cartão.',
+      },
+      {
+        name: 'Upload Docs',
+        detail: 'Vendedor sobe CNH e Doc do Carro no CRM.',
+      },
+      {
+        name: 'Portal Seguradora',
+        detail: 'Transmissão da proposta para a Porto/SulAmérica.',
+      },
+      {
+        name: 'Apólice Gerada',
+        detail: 'Vendedor faz o download da apólice aprovada.',
+      },
+      {
+        name: 'Anexo no CRM',
+        detail: 'Documento é indexado. Vencimento é agendado (365d).',
+      },
+    ],
+  },
+  {
+    id: 'wf4',
+    title: 'Fluxo Analítico de Relatórios',
+    steps: [
+      {
+        name: 'Extração',
+        detail: 'Admin abre a página de Relatórios Avançados.',
+      },
+      {
+        name: 'Filtro',
+        detail: 'Seleciona os últimos 30 dias de performance.',
+      },
+      {
+        name: 'Análise de Gargalo',
+        detail: 'Identifica retenção anormal na coluna "MQL".',
+      },
+      {
+        name: 'Intervenção',
+        detail: 'Faz reunião de alinhamento com os corretores.',
+      },
+      {
+        name: 'Exportação',
+        detail: 'Gera PDF do Funil para envio à Diretoria.',
+      },
+    ],
+  },
+  {
+    id: 'wf5',
+    title: 'Distribuição Round Robin (Admin)',
+    steps: [
+      {
+        name: 'Lead Inbound',
+        detail: 'Lead entra por integração via Webhook/N8N.',
+      },
+      {
+        name: 'Atribuição',
+        detail: 'O CRM checa qual vendedor "Ativo" tem menos leads abertos.',
+      },
+      {
+        name: 'Transferência',
+        detail: 'Atualiza o proprietario_id no Supabase automaticamente.',
+      },
+      {
+        name: 'Notificação',
+        detail: 'Dispara alerta na interface e Slack do Vendedor sorteado.',
+      },
+      {
+        name: 'SLA Start',
+        detail: 'Inicia o relógio de resposta rápida (Meta: 15 min).',
       },
     ],
   },

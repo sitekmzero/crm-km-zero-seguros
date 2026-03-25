@@ -572,6 +572,71 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_posts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          module_id: string | null
+          resolved: boolean | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          module_id?: string | null
+          resolved?: boolean | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          module_id?: string | null
+          resolved?: boolean | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      forum_replies: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'forum_replies_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'forum_posts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       interactions: {
         Row: {
           client_id: string | null
@@ -1034,6 +1099,30 @@ export type Database = {
         }
         Relationships: []
       }
+      training_progress: {
+        Row: {
+          completed_at: string | null
+          id: string
+          module_id: string
+          score: number
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          score: number
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          score?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -1428,6 +1517,21 @@ export const Constants = {
 //   stage: text (nullable)
 //   delay_hours: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: forum_posts
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   module_id: text (nullable)
+//   title: text (not null)
+//   content: text (not null)
+//   resolved: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: forum_replies
+//   id: uuid (not null, default: gen_random_uuid())
+//   post_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   content: text (not null)
+//   is_correct: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: interactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   client_id: uuid (nullable)
@@ -1540,6 +1644,12 @@ export const Constants = {
 //   sac_link: text (nullable)
 //   produtos_oferecidos: _text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: training_progress
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   module_id: text (not null)
+//   score: integer (not null)
+//   completed_at: timestamp with time zone (nullable, default: now())
 // Table: user_profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
@@ -1617,6 +1727,13 @@ export const Constants = {
 //   PRIMARY KEY email_logs_pkey: PRIMARY KEY (id)
 // Table: email_templates
 //   PRIMARY KEY email_templates_pkey: PRIMARY KEY (id)
+// Table: forum_posts
+//   PRIMARY KEY forum_posts_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY forum_posts_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: forum_replies
+//   PRIMARY KEY forum_replies_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY forum_replies_post_id_fkey: FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE
+//   FOREIGN KEY forum_replies_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: interactions
 //   FOREIGN KEY interactions_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   CHECK interactions_interaction_type_check: CHECK ((interaction_type = ANY (ARRAY['chamada'::text, 'email'::text, 'mensagem'::text, 'visita'::text])))
@@ -1654,6 +1771,10 @@ export const Constants = {
 //   FOREIGN KEY referrals_referrer_id_fkey: FOREIGN KEY (referrer_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: seguradoras
 //   PRIMARY KEY seguradoras_pkey: PRIMARY KEY (id)
+// Table: training_progress
+//   PRIMARY KEY training_progress_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY training_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE training_progress_user_id_module_id_key: UNIQUE (user_id, module_id)
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
@@ -1749,6 +1870,18 @@ export const Constants = {
 //   Policy "Templates All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: forum_posts
+//   Policy "Forum posts are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Users can create forum posts" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = user_id)
+// Table: forum_replies
+//   Policy "Admins can update forum replies" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Forum replies are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Users can create forum replies" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = user_id)
 // Table: interactions
 //   Policy "admins_all_interactions" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1818,6 +1951,13 @@ export const Constants = {
 // Table: seguradoras
 //   Policy "seguradoras_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
+// Table: training_progress
+//   Policy "Users can insert their own progress" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can see their own progress" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = user_id) OR (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true)))))
+//   Policy "Users can update their own progress" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 // Table: user_profiles
 //   Policy "Users can read own profile" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = id)
@@ -1936,3 +2076,5 @@ export const Constants = {
 // --- INDEXES ---
 // Table: clients
 //   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
+// Table: training_progress
+//   CREATE UNIQUE INDEX training_progress_user_id_module_id_key ON public.training_progress USING btree (user_id, module_id)

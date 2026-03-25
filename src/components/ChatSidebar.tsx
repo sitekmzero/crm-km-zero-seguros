@@ -71,14 +71,14 @@ export function ChatSidebar({ className }: { className?: string }) {
           <NavItem
             to="/treinamento"
             icon={GraduationCap}
-            label="Treinamento (EAD)"
+            label="Academia (EAD)"
             active={location.pathname.startsWith('/treinamento')}
           />
           <NavItem
             to="/manual"
             icon={BookOpen}
-            label="Manual do CRM"
-            active={location.pathname === '/manual'}
+            label="Manual Consultivo"
+            active={location.pathname.startsWith('/manual')}
           />
           <NavItem
             to="/settings"
@@ -90,7 +90,7 @@ export function ChatSidebar({ className }: { className?: string }) {
             <NavItem
               to="/diagnostico"
               icon={Activity}
-              label="Diagnóstico 360"
+              label="Auditoria de Sistema"
               active={location.pathname === '/diagnostico'}
             />
           )}
