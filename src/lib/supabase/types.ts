@@ -36,6 +36,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          priority: string | null
+          read: boolean | null
+          title: string
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          priority?: string | null
+          read?: boolean | null
+          title: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          priority?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       avaliacoes: {
         Row: {
           ativo: boolean | null
@@ -161,11 +194,14 @@ export type Database = {
           id: string
           last_activity_date: string
           last_name: string | null
+          lead_score: number | null
           modelo_captura: string | null
           observacoes: string | null
           phone: string | null
+          probability: number | null
           produto_interesse: string | null
           proprietario_id: string | null
+          stage_updated_at: string | null
           status: string
         }
         Insert: {
@@ -178,11 +214,14 @@ export type Database = {
           id?: string
           last_activity_date?: string
           last_name?: string | null
+          lead_score?: number | null
           modelo_captura?: string | null
           observacoes?: string | null
           phone?: string | null
+          probability?: number | null
           produto_interesse?: string | null
           proprietario_id?: string | null
+          stage_updated_at?: string | null
           status?: string
         }
         Update: {
@@ -195,11 +234,14 @@ export type Database = {
           id?: string
           last_activity_date?: string
           last_name?: string | null
+          lead_score?: number | null
           modelo_captura?: string | null
           observacoes?: string | null
           phone?: string | null
+          probability?: number | null
           produto_interesse?: string | null
           proprietario_id?: string | null
+          stage_updated_at?: string | null
           status?: string
         }
         Relationships: []
@@ -467,6 +509,36 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string | null
+          delay_hours: number | null
+          id: string
+          name: string
+          stage: string | null
+          subject: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          delay_hours?: number | null
+          id?: string
+          name: string
+          stage?: string | null
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          delay_hours?: number | null
+          id?: string
+          name?: string
+          stage?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       interactions: {
         Row: {
           client_id: string | null
@@ -508,6 +580,38 @@ export type Database = {
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'user_profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      internal_messages: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'internal_messages_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
             referencedColumns: ['id']
           },
         ]
@@ -912,6 +1016,30 @@ export type Database = {
           },
         ]
       }
+      vendor_config: {
+        Row: {
+          google_calendar_token: Json | null
+          n8n_webhook_url: string | null
+          pipedrive_api_key: string | null
+          specialties: string[] | null
+          user_id: string
+        }
+        Insert: {
+          google_calendar_token?: Json | null
+          n8n_webhook_url?: string | null
+          pipedrive_api_key?: string | null
+          specialties?: string[] | null
+          user_id: string
+        }
+        Update: {
+          google_calendar_token?: Json | null
+          n8n_webhook_url?: string | null
+          pipedrive_api_key?: string | null
+          specialties?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1066,6 +1194,15 @@ export const Constants = {
 //   user_email: text (not null)
 //   success: boolean (nullable)
 //   login_attempt_time: timestamp with time zone (nullable, default: now())
+// Table: app_notifications
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   title: text (not null)
+//   message: text (not null)
+//   type: text (nullable, default: 'info'::text)
+//   priority: text (nullable, default: 'normal'::text)
+//   read: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome_cliente: text (not null)
@@ -1112,6 +1249,9 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   last_activity_date: timestamp with time zone (not null, default: now())
 //   proprietario_id: uuid (nullable)
+//   lead_score: integer (nullable, default: 0)
+//   probability: integer (nullable, default: 0)
+//   stage_updated_at: timestamp with time zone (nullable, default: now())
 // Table: conversion_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (nullable)
@@ -1170,6 +1310,14 @@ export const Constants = {
 //   sent_at: timestamp with time zone (nullable, default: now())
 //   opened_at: timestamp with time zone (nullable)
 //   clicked_at: timestamp with time zone (nullable)
+// Table: email_templates
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   subject: text (not null)
+//   body: text (not null)
+//   stage: text (nullable)
+//   delay_hours: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: interactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   client_id: uuid (nullable)
@@ -1178,6 +1326,12 @@ export const Constants = {
 //   notes: text (nullable)
 //   interaction_date: timestamp with time zone (nullable, default: now())
 //   next_follow_up: date (nullable)
+// Table: internal_messages
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   message: text (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (nullable)
@@ -1281,10 +1435,19 @@ export const Constants = {
 //   data_proposta: timestamp with time zone (nullable)
 //   data_emissao: timestamp with time zone (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: vendor_config
+//   user_id: uuid (not null)
+//   specialties: _text (nullable)
+//   n8n_webhook_url: text (nullable)
+//   pipedrive_api_key: text (nullable)
+//   google_calendar_token: jsonb (nullable)
 
 // --- CONSTRAINTS ---
 // Table: access_logs
 //   PRIMARY KEY access_logs_pkey: PRIMARY KEY (id)
+// Table: app_notifications
+//   PRIMARY KEY app_notifications_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY app_notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: avaliacoes
 //   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
@@ -1323,11 +1486,17 @@ export const Constants = {
 //   FOREIGN KEY email_logs_campaign_id_fkey: FOREIGN KEY (campaign_id) REFERENCES email_campaigns(id) ON DELETE CASCADE
 //   FOREIGN KEY email_logs_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   PRIMARY KEY email_logs_pkey: PRIMARY KEY (id)
+// Table: email_templates
+//   PRIMARY KEY email_templates_pkey: PRIMARY KEY (id)
 // Table: interactions
 //   FOREIGN KEY interactions_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   CHECK interactions_interaction_type_check: CHECK ((interaction_type = ANY (ARRAY['chamada'::text, 'email'::text, 'mensagem'::text, 'visita'::text])))
 //   PRIMARY KEY interactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE SET NULL
+// Table: internal_messages
+//   FOREIGN KEY internal_messages_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY internal_messages_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY internal_messages_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
@@ -1357,11 +1526,18 @@ export const Constants = {
 //   PRIMARY KEY vendas_online_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY vendas_online_seguradora_id_fkey: FOREIGN KEY (seguradora_id) REFERENCES seguradoras(id)
 //   CHECK vendas_online_status_check: CHECK ((status = ANY (ARRAY['cotacao'::text, 'proposta'::text, 'emissao'::text, 'cancelada'::text])))
+// Table: vendor_config
+//   PRIMARY KEY vendor_config_pkey: PRIMARY KEY (user_id)
+//   FOREIGN KEY vendor_config_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: access_logs
 //   Policy "access_logs_insert" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
+// Table: app_notifications
+//   Policy "Notifications All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//     WITH CHECK: (auth.uid() = user_id)
 // Table: avaliacoes
 //   Policy "avaliacoes_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
@@ -1429,11 +1605,19 @@ export const Constants = {
 // Table: email_logs
 //   Policy "admins_all_logs" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+// Table: email_templates
+//   Policy "Templates All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: interactions
 //   Policy "admins_all_interactions" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "clients_own_interactions" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (client_id = auth.uid())
+// Table: internal_messages
+//   Policy "Messages All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: leads
 //   Policy "Allow anon insert on leads" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
@@ -1493,6 +1677,10 @@ export const Constants = {
 //   Policy "vendas_online_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
+// Table: vendor_config
+//   Policy "Vendor Config All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION rls_auto_enable()
@@ -1526,6 +1714,36 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trigger_process_automations()
+//   CREATE OR REPLACE FUNCTION public.trigger_process_automations()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     payload jsonb;
+//   BEGIN
+//     payload := jsonb_build_object(
+//       'type', TG_OP,
+//       'record', row_to_json(NEW),
+//       'old_record', CASE WHEN TG_OP = 'UPDATE' THEN row_to_json(OLD) ELSE null END
+//     );
+//
+//     BEGIN
+//       -- We assume the edge function is deployed at the default path
+//       PERFORM net.http_post(
+//         url := current_setting('app.settings.supabase_url', true) || '/functions/v1/process-automations',
+//         headers := '{"Content-Type": "application/json", "Authorization": "Bearer ' || current_setting('app.settings.service_role_key', true) || '"}',
+//         body := payload
+//       );
+//     EXCEPTION WHEN OTHERS THEN
+//       -- Fallback silently if pg_net fails or not configured
+//     END;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trigger_send_welcome_email()
 //   CREATE OR REPLACE FUNCTION public.trigger_send_welcome_email()
 //    RETURNS trigger
@@ -1546,10 +1764,26 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION update_stage_updated_at()
+//   CREATE OR REPLACE FUNCTION public.update_stage_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//      IF NEW.status IS DISTINCT FROM OLD.status THEN
+//         NEW.stage_updated_at = NOW();
+//      END IF;
+//      RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: clients
 //   on_client_created_welcome: CREATE TRIGGER on_client_created_welcome AFTER INSERT ON public.clients FOR EACH ROW EXECUTE FUNCTION trigger_send_welcome_email()
+// Table: contacts
+//   on_contact_automations: CREATE TRIGGER on_contact_automations AFTER INSERT OR UPDATE OF status ON public.contacts FOR EACH ROW EXECUTE FUNCTION trigger_process_automations()
+//   on_contact_status_change: CREATE TRIGGER on_contact_status_change BEFORE UPDATE ON public.contacts FOR EACH ROW EXECUTE FUNCTION update_stage_updated_at()
 
 // --- INDEXES ---
 // Table: clients

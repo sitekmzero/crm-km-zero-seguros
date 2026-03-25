@@ -14,17 +14,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { UserManagement } from '@/components/settings/UserManagement'
 
 export default function Settings() {
   const { user, isAdmin } = useAuth()
   const { toast } = useToast()
 
-  // Integrations State
   const [n8nUrl, setN8nUrl] = useState('')
   const [pipedriveKey, setPipedriveKey] = useState('')
   const [specialties, setSpecialties] = useState('')
-
-  // Templates State
   const [templates, setTemplates] = useState<any[]>([])
   const [editingTemplate, setEditingTemplate] = useState<any>(null)
 
@@ -110,12 +108,15 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs defaultValue="perfil" className="w-full max-w-4xl">
-        <TabsList className="mb-6 bg-muted/50 p-1">
+      <Tabs defaultValue="perfil" className="w-full max-w-5xl">
+        <TabsList className="mb-6 bg-muted/50 p-1 flex-wrap h-auto">
           <TabsTrigger value="perfil">Perfil</TabsTrigger>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="templates">Templates (Admin)</TabsTrigger>
+            <>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+            </>
           )}
         </TabsList>
 
@@ -187,133 +188,141 @@ export default function Settings() {
         </TabsContent>
 
         {isAdmin && (
-          <TabsContent value="templates" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Automação de E-mails (Por Estágio)</CardTitle>
-                <CardDescription>
-                  Configure as mensagens enviadas automaticamente aos clientes.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {editingTemplate ? (
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-lg border border-border">
-                    <h3 className="font-semibold">
-                      {editingTemplate.id ? 'Editar' : 'Novo'} Template
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
+          <>
+            <TabsContent value="templates" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Automação de E-mails (Por Estágio)</CardTitle>
+                  <CardDescription>
+                    Configure as mensagens enviadas automaticamente aos
+                    clientes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {editingTemplate ? (
+                    <div className="space-y-4 bg-muted/20 p-4 rounded-lg border border-border">
+                      <h3 className="font-semibold">
+                        {editingTemplate.id ? 'Editar' : 'Novo'} Template
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nome do Template</Label>
+                          <Input
+                            value={editingTemplate.name}
+                            onChange={(e) =>
+                              setEditingTemplate({
+                                ...editingTemplate,
+                                name: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Disparar no Estágio</Label>
+                          <Input
+                            value={editingTemplate.stage}
+                            onChange={(e) =>
+                              setEditingTemplate({
+                                ...editingTemplate,
+                                stage: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: lead, opportunity"
+                          />
+                        </div>
+                      </div>
                       <div className="space-y-2">
-                        <Label>Nome do Template</Label>
+                        <Label>Assunto</Label>
                         <Input
-                          value={editingTemplate.name}
+                          value={editingTemplate.subject}
                           onChange={(e) =>
                             setEditingTemplate({
                               ...editingTemplate,
-                              name: e.target.value,
+                              subject: e.target.value,
                             })
                           }
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Disparar no Estágio</Label>
-                        <Input
-                          value={editingTemplate.stage}
+                        <Label>Corpo (HTML permitido)</Label>
+                        <Textarea
+                          className="min-h-[150px]"
+                          value={editingTemplate.body}
                           onChange={(e) =>
                             setEditingTemplate({
                               ...editingTemplate,
-                              stage: e.target.value,
+                              body: e.target.value,
                             })
                           }
-                          placeholder="Ex: lead, opportunity"
                         />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Assunto</Label>
-                      <Input
-                        value={editingTemplate.subject}
-                        onChange={(e) =>
-                          setEditingTemplate({
-                            ...editingTemplate,
-                            subject: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Corpo (HTML permitido)</Label>
-                      <Textarea
-                        className="min-h-[150px]"
-                        value={editingTemplate.body}
-                        onChange={(e) =>
-                          setEditingTemplate({
-                            ...editingTemplate,
-                            body: e.target.value,
-                          })
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Variáveis: {'{{nome_cliente}}, {{produto}}'}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={saveTemplate}>Salvar Template</Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setEditingTemplate(null)}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Button
-                      onClick={() =>
-                        setEditingTemplate({
-                          name: '',
-                          stage: '',
-                          subject: '',
-                          body: '',
-                        })
-                      }
-                    >
-                      Criar Novo Template
-                    </Button>
-
-                    <div className="grid gap-2">
-                      {templates.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          Nenhum template configurado.
+                        <p className="text-xs text-muted-foreground">
+                          Variáveis: {'{{nome_cliente}}, {{produto}}'}
                         </p>
-                      ) : (
-                        templates.map((t) => (
-                          <div
-                            key={t.id}
-                            className="flex justify-between items-center p-3 border border-border rounded-lg bg-card"
-                          >
-                            <div>
-                              <p className="font-semibold text-sm">{t.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Gatilho: {t.stage}
-                              </p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditingTemplate(t)}
-                            >
-                              Editar
-                            </Button>
-                          </div>
-                        ))
-                      )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={saveTemplate}>Salvar Template</Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingTemplate(null)}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  ) : (
+                    <div className="space-y-4">
+                      <Button
+                        onClick={() =>
+                          setEditingTemplate({
+                            name: '',
+                            stage: '',
+                            subject: '',
+                            body: '',
+                          })
+                        }
+                      >
+                        Criar Novo Template
+                      </Button>
+                      <div className="grid gap-2">
+                        {templates.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            Nenhum template configurado.
+                          </p>
+                        ) : (
+                          templates.map((t) => (
+                            <div
+                              key={t.id}
+                              className="flex justify-between items-center p-3 border border-border rounded-lg bg-card"
+                            >
+                              <div>
+                                <p className="font-semibold text-sm">
+                                  {t.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Gatilho: {t.stage}
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingTemplate(t)}
+                              >
+                                Editar
+                              </Button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="usuarios" className="space-y-6">
+              <UserManagement />
+            </TabsContent>
+          </>
         )}
       </Tabs>
     </div>

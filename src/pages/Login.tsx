@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -25,7 +26,23 @@ export default function Login() {
         variant: 'destructive',
       })
     } else {
-      navigate('/')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role, is_admin')
+          .eq('id', user.id)
+          .single()
+        if (profile?.role === 'admin' || profile?.is_admin) {
+          navigate('/dashboard')
+        } else {
+          navigate('/')
+        }
+      } else {
+        navigate('/')
+      }
     }
     setLoading(false)
   }
@@ -66,7 +83,8 @@ export default function Login() {
           </div>
           <Button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+            className="w-full font-semibold hover:opacity-90"
+            style={{ backgroundColor: '#C8A24A', color: '#ffffff' }}
             disabled={loading}
           >
             {loading ? 'Entrando...' : 'Entrar'}
