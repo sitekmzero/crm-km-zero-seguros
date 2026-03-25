@@ -7,6 +7,8 @@ import {
   FolderOpen,
   BookOpen,
   Ticket,
+  GraduationCap,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -16,7 +18,7 @@ import { useAuth } from '@/hooks/use-auth'
 
 export function ChatSidebar({ className }: { className?: string }) {
   const location = useLocation()
-  const { signOut } = useAuth()
+  const { signOut, isAdmin } = useAuth()
 
   return (
     <aside
@@ -67,10 +69,10 @@ export function ChatSidebar({ className }: { className?: string }) {
           />
           <div className="my-4 border-t border-sidebar-border mx-2" />
           <NavItem
-            to="/settings"
-            icon={SettingsIcon}
-            label="Configurações"
-            active={location.pathname === '/settings'}
+            to="/treinamento"
+            icon={GraduationCap}
+            label="Treinamento (EAD)"
+            active={location.pathname.startsWith('/treinamento')}
           />
           <NavItem
             to="/manual"
@@ -78,6 +80,20 @@ export function ChatSidebar({ className }: { className?: string }) {
             label="Manual do CRM"
             active={location.pathname === '/manual'}
           />
+          <NavItem
+            to="/settings"
+            icon={SettingsIcon}
+            label="Configurações"
+            active={location.pathname === '/settings'}
+          />
+          {isAdmin && (
+            <NavItem
+              to="/diagnostico"
+              icon={Activity}
+              label="Diagnóstico 360"
+              active={location.pathname === '/diagnostico'}
+            />
+          )}
         </div>
       </ScrollArea>
 

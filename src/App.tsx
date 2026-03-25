@@ -18,6 +18,10 @@ import { NotificationProvider } from '@/hooks/use-notifications'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import UpdatePassword from './pages/UpdatePassword'
 import AuditLog from './pages/AuditLog'
+import Treinamento from './pages/Treinamento'
+import TreinamentoModulo from './pages/TreinamentoModulo'
+import TreinamentoRelatorio from './pages/TreinamentoRelatorio'
+import Diagnostico from './pages/Diagnostico'
 import { useEffect } from 'react'
 
 const HashRouterHandler = () => {
@@ -64,6 +68,16 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/manual" element={<Manual />} />
                 <Route path="/audit" element={<AuditLog />} />
+                <Route path="/treinamento" element={<Treinamento />} />
+                <Route
+                  path="/treinamento/modulo/:id"
+                  element={<TreinamentoModulo />}
+                />
+                <Route
+                  path="/treinamento/relatorio"
+                  element={<TreinamentoRelatorio />}
+                />
+                <Route path="/diagnostico" element={<Diagnostico />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

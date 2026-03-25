@@ -319,6 +319,7 @@ export type Database = {
           name: string | null
           phone: string | null
           resend_api_key: string | null
+          round_robin_enabled: boolean | null
           slack_webhook: string | null
           state: string | null
           updated_at: string | null
@@ -337,6 +338,7 @@ export type Database = {
           name?: string | null
           phone?: string | null
           resend_api_key?: string | null
+          round_robin_enabled?: boolean | null
           slack_webhook?: string | null
           state?: string | null
           updated_at?: string | null
@@ -355,6 +357,7 @@ export type Database = {
           name?: string | null
           phone?: string | null
           resend_api_key?: string | null
+          round_robin_enabled?: boolean | null
           slack_webhook?: string | null
           state?: string | null
           updated_at?: string | null
@@ -431,7 +434,8 @@ export type Database = {
       }
       documents: {
         Row: {
-          client_id: string
+          client_id: string | null
+          contact_id: string | null
           document_type: string
           file_name: string
           file_path: string
@@ -440,7 +444,8 @@ export type Database = {
           uploaded_at: string
         }
         Insert: {
-          client_id: string
+          client_id?: string | null
+          contact_id?: string | null
           document_type: string
           file_name: string
           file_path: string
@@ -449,7 +454,8 @@ export type Database = {
           uploaded_at?: string
         }
         Update: {
-          client_id?: string
+          client_id?: string | null
+          contact_id?: string | null
           document_type?: string
           file_name?: string
           file_path?: string
@@ -459,10 +465,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'documents_client_id_fkey'
-            columns: ['client_id']
+            foreignKeyName: 'documents_contact_id_fkey'
+            columns: ['contact_id']
             isOneToOne: false
-            referencedRelation: 'clients'
+            referencedRelation: 'contacts'
             referencedColumns: ['id']
           },
         ]
@@ -733,6 +739,30 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_feedback: {
+        Row: {
+          data: string | null
+          id: string
+          mensagem: string | null
+          pagina: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          data?: string | null
+          id?: string
+          mensagem?: string | null
+          pagina?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          data?: string | null
+          id?: string
+          mensagem?: string | null
+          pagina?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       notificacoes_vendas: {
         Row: {
           created_at: string
@@ -791,6 +821,47 @@ export type Database = {
           used?: boolean | null
         }
         Relationships: []
+      }
+      policies: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          expiration_date: string | null
+          id: string
+          issue_date: string | null
+          policy_number: string | null
+          product_type: string | null
+          status: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          policy_number?: string | null
+          product_type?: string | null
+          status?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          policy_number?: string | null
+          product_type?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'policies_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
       }
       products: {
         Row: {
@@ -1312,6 +1383,7 @@ export const Constants = {
 //   slack_webhook: text (nullable)
 //   resend_api_key: text (nullable)
 //   gemini_api_key: text (nullable)
+//   round_robin_enabled: boolean (nullable, default: false)
 // Table: cotacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (nullable)
@@ -1327,12 +1399,13 @@ export const Constants = {
 //   user_id: uuid (nullable)
 // Table: documents
 //   id: uuid (not null, default: gen_random_uuid())
-//   client_id: uuid (not null)
+//   client_id: uuid (nullable)
 //   file_name: text (not null)
 //   file_path: text (not null)
 //   document_type: text (not null)
 //   uploaded_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   contact_id: uuid (nullable)
 // Table: email_campaigns
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1397,6 +1470,12 @@ export const Constants = {
 //   metadata: jsonb (nullable, default: '{}'::jsonb)
 //   person_type: text (nullable)
 //   cnpj: text (nullable)
+// Table: manual_feedback
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   pagina: text (nullable)
+//   mensagem: text (nullable)
+//   data: timestamp with time zone (nullable, default: now())
 // Table: notificacoes_vendas
 //   id: uuid (not null, default: gen_random_uuid())
 //   venda_id: uuid (nullable)
@@ -1410,6 +1489,15 @@ export const Constants = {
 //   expires_at: timestamp with time zone (not null)
 //   used: boolean (nullable, default: false)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: policies
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   policy_number: text (nullable)
+//   product_type: text (nullable)
+//   issue_date: date (nullable)
+//   expiration_date: date (nullable)
+//   status: text (nullable, default: 'active'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: products
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1516,7 +1604,7 @@ export const Constants = {
 //   PRIMARY KEY crm_interactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY crm_interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: documents
-//   FOREIGN KEY documents_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+//   FOREIGN KEY documents_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   CHECK documents_document_type_check: CHECK ((document_type = ANY (ARRAY['apólice'::text, 'documento_pessoal'::text, 'contrato'::text, 'comprovante'::text])))
 //   PRIMARY KEY documents_pkey: PRIMARY KEY (id)
 // Table: email_campaigns
@@ -1541,11 +1629,17 @@ export const Constants = {
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
+// Table: manual_feedback
+//   PRIMARY KEY manual_feedback_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY manual_feedback_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: notificacoes_vendas
 //   PRIMARY KEY notificacoes_vendas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY notificacoes_vendas_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas_online(id)
 // Table: otp_validacoes
 //   PRIMARY KEY otp_validacoes_pkey: PRIMARY KEY (id)
+// Table: policies
+//   FOREIGN KEY policies_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY policies_pkey: PRIMARY KEY (id)
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
 // Table: quotations
@@ -1674,12 +1768,20 @@ export const Constants = {
 //   Policy "Allow authenticated update on leads" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: manual_feedback
+//   Policy "Feedback All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: notificacoes_vendas
 //   Policy "notificacoes_vendas_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
 // Table: otp_validacoes
 //   Policy "otp_validacoes_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
+// Table: policies
+//   Policy "Policies All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: products
