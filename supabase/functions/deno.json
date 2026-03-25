@@ -25,6 +25,7 @@
     "calculate-lead-score": 1,
     "process-automations": 1,
     "gemini-chatbot": 1,
-    "google-calendar-schedule": 1
+    "google-calendar-schedule": 1,
+    "manage-users": 1
   }
 }
