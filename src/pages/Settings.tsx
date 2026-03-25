@@ -34,11 +34,12 @@ export default function Settings() {
   }, [user, isAdmin])
 
   const fetchVendorConfig = async () => {
+    if (!user) return
     const { data } = await supabase
       .from('vendor_config')
       .select('*')
-      .eq('user_id', user?.id)
-      .single()
+      .eq('user_id', user.id)
+      .maybeSingle()
     if (data) {
       setN8nUrl(data.n8n_webhook_url || '')
       setPipedriveKey(data.pipedrive_api_key || '')
@@ -55,8 +56,9 @@ export default function Settings() {
   }
 
   const saveIntegrations = async () => {
+    if (!user) return
     const { error } = await supabase.from('vendor_config').upsert({
-      user_id: user?.id,
+      user_id: user.id,
       n8n_webhook_url: n8nUrl,
       pipedrive_api_key: pipedriveKey,
       specialties: specialties

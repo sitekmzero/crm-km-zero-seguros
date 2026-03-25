@@ -69,6 +69,33 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          acao: string
+          data_hora: string
+          descricao: string | null
+          id: string
+          ip_usuario: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          data_hora?: string
+          descricao?: string | null
+          id?: string
+          ip_usuario?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          data_hora?: string
+          descricao?: string | null
+          id?: string
+          ip_usuario?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       avaliacoes: {
         Row: {
           ativo: boolean | null
@@ -944,6 +971,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           role: string | null
+          status: string | null
         }
         Insert: {
           created_at?: string | null
@@ -952,6 +980,7 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           role?: string | null
+          status?: string | null
         }
         Update: {
           created_at?: string | null
@@ -960,6 +989,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           role?: string | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -1203,6 +1233,13 @@ export const Constants = {
 //   priority: text (nullable, default: 'normal'::text)
 //   read: boolean (nullable, default: false)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: audit_log
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   acao: text (not null)
+//   descricao: text (nullable)
+//   ip_usuario: text (nullable)
+//   data_hora: timestamp with time zone (not null, default: now())
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome_cliente: text (not null)
@@ -1422,6 +1459,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   role: text (nullable, default: 'vendedor'::text)
 //   email: text (nullable)
+//   status: text (nullable, default: 'ativo'::text)
 // Table: vendas_online
 //   id: uuid (not null, default: gen_random_uuid())
 //   cliente_id: uuid (nullable)
@@ -1448,6 +1486,9 @@ export const Constants = {
 // Table: app_notifications
 //   PRIMARY KEY app_notifications_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY app_notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: audit_log
+//   PRIMARY KEY audit_log_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY audit_log_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: avaliacoes
 //   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
@@ -1538,6 +1579,11 @@ export const Constants = {
 //   Policy "Notifications All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
 //     WITH CHECK: (auth.uid() = user_id)
+// Table: audit_log
+//   Policy "Admins can insert audit log" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
+//   Policy "Admins can view audit log" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
 // Table: avaliacoes
 //   Policy "avaliacoes_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true

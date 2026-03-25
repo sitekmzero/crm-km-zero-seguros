@@ -53,10 +53,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from('user_profiles')
         .select('is_admin, role')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data) {
             setIsAdmin(data.is_admin || data.role === 'admin')
+          } else {
+            setIsAdmin(false)
           }
         })
     } else {
