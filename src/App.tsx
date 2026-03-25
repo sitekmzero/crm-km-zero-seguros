@@ -7,11 +7,14 @@ import Dashboard from './pages/Dashboard'
 import Quotations from './pages/Quotations'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Documents from './pages/Documents'
+import Manual from './pages/Manual'
 import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import { ContactsProvider } from '@/stores/useContactsStore'
 import { AuthProvider } from '@/hooks/use-auth'
+import { NotificationProvider } from '@/hooks/use-notifications'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import UpdatePassword from './pages/UpdatePassword'
 import AuditLog from './pages/AuditLog'
@@ -39,29 +42,33 @@ const App = () => (
     <HashRouterHandler />
     <TooltipProvider delayDuration={0}>
       <AuthProvider>
-        <ContactsProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/quotations" element={<Quotations />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/audit" element={<AuditLog />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ContactsProvider>
+        <NotificationProvider>
+          <ContactsProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/quotations" element={<Quotations />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/manual" element={<Manual />} />
+                <Route path="/audit" element={<AuditLog />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ContactsProvider>
+        </NotificationProvider>
       </AuthProvider>
     </TooltipProvider>
   </BrowserRouter>

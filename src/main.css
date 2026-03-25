@@ -1,177 +1,94 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 44 33% 94%; /* #F5F2EA */
-    --foreground: 215 68% 14%; /* #0B1F3B */
+    --background: 45 40% 94%; /* #F5F2EA */
+    --foreground: 218 69% 14%; /* #0B1F3B */
 
     --card: 0 0% 100%;
-    --card-foreground: 215 68% 14%;
+    --card-foreground: 218 69% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 68% 14%;
+    --popover-foreground: 218 69% 14%;
 
-    --primary: 42 54% 54%; /* #C8A24A */
+    --primary: 43 55% 54%; /* #C8A24A Dourado */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 215 68% 14%;
+    --secondary: 218 69% 14%; /* #0B1F3B Azul Profundo */
+    --secondary-foreground: 45 40% 94%;
 
-    --muted: 44 20% 85%;
-    --muted-foreground: 215 30% 40%;
+    --muted: 45 20% 88%;
+    --muted-foreground: 218 20% 40%;
 
-    --accent: 42 54% 54%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 45 40% 90%;
+    --accent-foreground: 218 69% 14%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 44 20% 85%;
-    --input: 44 20% 85%;
-    --ring: 42 54% 54%;
+    --border: 45 20% 85%;
+    --input: 45 20% 85%;
+    --ring: 43 55% 54%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 215 68% 14%; /* #0B1F3B */
-    --sidebar-foreground: 44 33% 94%; /* #F5F2EA */
-    --sidebar-primary: 42 54% 54%; /* #C8A24A */
+    --sidebar-background: 218 69% 14%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 43 55% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 50% 20%;
-    --sidebar-accent-foreground: 44 33% 94%;
-    --sidebar-border: 215 50% 20%;
-    --sidebar-ring: 42 54% 54%;
-
-    --chart-1: 42 54% 54%;
-    --chart-2: 215 68% 14%;
-    --chart-3: 209 100% 32%;
-    --chart-4: 42 100% 50%;
-    --chart-5: 33 100% 50%;
+    --sidebar-accent: 218 60% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 218 60% 20%;
+    --sidebar-ring: 43 55% 54%;
   }
 
-  .dark {
-    --background: 215 68% 14%;
-    --foreground: 44 33% 94%;
-
-    --card: 215 68% 14%;
-    --card-foreground: 44 33% 94%;
-
-    --popover: 215 68% 14%;
-    --popover-foreground: 44 33% 94%;
-
-    --primary: 42 54% 54%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 50% 20%;
-    --secondary-foreground: 44 33% 94%;
-
-    --muted: 215 50% 20%;
-    --muted-foreground: 215 20% 70%;
-
-    --accent: 42 54% 54%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 50% 20%;
-    --input: 215 50% 20%;
-    --ring: 42 54% 54%;
-
-    --sidebar-background: 215 68% 14%;
-    --sidebar-foreground: 44 33% 94%;
-    --sidebar-primary: 42 54% 54%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 50% 20%;
-    --sidebar-accent-foreground: 44 33% 94%;
-    --sidebar-border: 215 50% 20%;
-    --sidebar-ring: 42 54% 54%;
+  * {
+    @apply border-border;
   }
 
-  section[aria-label='Notifications alt+T'] {
-    padding: 0 !important;
-    margin: 0 !important;
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
   }
 }
 
 @layer utilities {
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
+  .shadow-elevation {
+    box-shadow: 0 10px 40px -10px rgba(11, 31, 59, 0.1);
   }
+}
 
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
   }
-
-  @keyframes fade-out {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
+  body {
+    background: white !important;
+    color: black !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
-
-  @keyframes fade-in-up {
-    from {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  .print\:hidden {
+    display: none !important;
   }
-
-  @keyframes fade-in-down {
-    from {
-      transform: translateY(-10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  .print\:block {
+    display: block !important;
   }
-
-  .animate-accordion-down {
-    animation: accordion-down 0.2s ease-out;
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
-  .animate-accordion-up {
-    animation: accordion-up 0.2s ease-out;
-  }
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
-  }
-  .animate-fade-out {
-    animation: fade-out 0.5s ease-out;
-  }
-  .animate-fade-in-up {
-    animation: fade-in-up 0.6s ease-out;
-  }
-  .animate-fade-in-down {
-    animation: fade-in-down 0.6s ease-out;
+  .print\:shadow-none {
+    box-shadow: none !important;
   }
 }

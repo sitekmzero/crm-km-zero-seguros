@@ -1,12 +1,12 @@
 import {
   Users,
-  Building2,
-  Briefcase,
-  Ticket,
   LayoutDashboard,
   FileText,
   Settings as SettingsIcon,
   LogOut,
+  FolderOpen,
+  BookOpen,
+  Ticket,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,7 @@ export function ChatSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'flex flex-col h-full bg-sidebar border-r border-sidebar-border w-[240px] text-sidebar-foreground',
+        'flex flex-col h-full bg-sidebar border-r border-sidebar-border w-[240px] text-sidebar-foreground print:hidden',
         className,
       )}
     >
@@ -54,19 +54,29 @@ export function ChatSidebar({ className }: { className?: string }) {
             active={location.pathname === '/quotations'}
           />
           <NavItem
+            to="/documents"
+            icon={FolderOpen}
+            label="Documentos"
+            active={location.pathname === '/documents'}
+          />
+          <NavItem
             to="/reports"
             icon={FileText}
             label="Relatórios"
             active={location.pathname === '/reports'}
           />
-
           <div className="my-4 border-t border-sidebar-border mx-2" />
-
           <NavItem
             to="/settings"
             icon={SettingsIcon}
             label="Configurações"
             active={location.pathname === '/settings'}
+          />
+          <NavItem
+            to="/manual"
+            icon={BookOpen}
+            label="Manual do CRM"
+            active={location.pathname === '/manual'}
           />
         </div>
       </ScrollArea>

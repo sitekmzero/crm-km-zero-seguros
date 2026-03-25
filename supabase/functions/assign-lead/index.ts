@@ -14,7 +14,13 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch active vendors and their configs
+    // Check Round Robin flag
+    const { data: configRow } = await supabase
+      .from('corretora_config')
+      .select('round_robin_enabled')
+      .single()
+    const isRoundRobin = configRow?.round_robin_enabled || false
+
     const { data: vendors, error: vErr } = await supabase
       .from('user_profiles')
       .select('id')
@@ -26,57 +32,49 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: vendorConfigs } = await supabase
-      .from('vendor_config')
-      .select('user_id, specialties')
-
-    // Fetch contacts to calculate load
     const { data: contactsData } = await supabase
       .from('contacts')
       .select('proprietario_id, status')
+      .in('status', [
+        'lead',
+        'marketing_qualified_lead',
+        'sales_qualified_lead',
+      ])
 
-    const vendorStats: Record<
-      string,
-      { activeLeads: number; specialties: string[]; isSpecialist: boolean }
-    > = {}
+    let selectedVendorId = vendors[0].id
 
-    vendors.forEach((v) => {
-      const config = vendorConfigs?.find((c) => c.user_id === v.id)
-      vendorStats[v.id] = {
-        activeLeads: 0,
-        specialties: config?.specialties || [],
-        isSpecialist: config?.specialties?.includes(produto) || false,
-      }
-    })
+    if (isRoundRobin) {
+      // Pure Round Robin: assign to vendor with minimum active leads
+      const counts: Record<string, number> = {}
+      vendors.forEach((v) => (counts[v.id] = 0))
+      contactsData?.forEach((c) => {
+        if (c.proprietario_id && counts[c.proprietario_id] !== undefined)
+          counts[c.proprietario_id]++
+      })
 
-    contactsData?.forEach((c) => {
-      if (c.proprietario_id && vendorStats[c.proprietario_id] !== undefined) {
-        if (
-          ['lead', 'marketing_qualified_lead', 'sales_qualified_lead'].includes(
-            c.status,
-          )
-        ) {
-          vendorStats[c.proprietario_id].activeLeads++
+      let minCount = Infinity
+      for (const id in counts) {
+        if (counts[id] < minCount) {
+          minCount = counts[id]
+          selectedVendorId = id
         }
       }
-    })
-
-    // Intelligent Assignment Logic
-    // 1. Prioritize specialist
-    // 2. Tie-break with lowest active leads load
-    let selectedVendorId = vendors[0].id
-    let bestScore = -999999
-
-    for (const vendor of vendors) {
-      const stats = vendorStats[vendor.id]
-      let score = 0
-
-      if (stats.isSpecialist) score += 1000 // heavy weight for specialist
-      score -= stats.activeLeads // subtract load
-
-      if (score > bestScore) {
-        bestScore = score
-        selectedVendorId = vendor.id
+    } else {
+      // Legacy Specialist Assignment
+      const { data: vendorConfigs } = await supabase
+        .from('vendor_config')
+        .select('user_id, specialties')
+      let bestScore = -999999
+      for (const v of vendors) {
+        const c = vendorConfigs?.find((c) => c.user_id === v.id)
+        const isSpecialist = c?.specialties?.includes(produto) || false
+        const activeCount =
+          contactsData?.filter((cc) => cc.proprietario_id === v.id).length || 0
+        const score = (isSpecialist ? 1000 : 0) - activeCount
+        if (score > bestScore) {
+          bestScore = score
+          selectedVendorId = v.id
+        }
       }
     }
 
@@ -86,17 +84,21 @@ Deno.serve(async (req: Request) => {
       .update({ proprietario_id: selectedVendorId })
       .eq('id', contact_id)
 
-    // Notify Vendor
+    // Notify Vendor via Realtime Notif
     await supabase.from('app_notifications').insert({
       user_id: selectedVendorId,
       title: 'Novo Lead Atribuído',
       message:
-        'Um novo lead foi atribuído a você pelo sistema de distribuição inteligente.',
+        'Um novo lead foi atribuído a você pelo sistema de distribuição automática.',
       type: 'info',
     })
 
     return new Response(
-      JSON.stringify({ success: true, assignedTo: selectedVendorId }),
+      JSON.stringify({
+        success: true,
+        assignedTo: selectedVendorId,
+        method: isRoundRobin ? 'round-robin' : 'specialist',
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (e: any) {

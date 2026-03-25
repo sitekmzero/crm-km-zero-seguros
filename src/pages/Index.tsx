@@ -11,6 +11,7 @@ import {
   Upload,
   Filter,
   X,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +24,7 @@ import { ContactsBoard } from '@/components/contacts/ContactsBoard'
 import { ContactDetailsSheet } from '@/components/contacts/ContactDetailsSheet'
 import { ImportCsvDialog } from '@/components/contacts/ImportCsvDialog'
 import { useAuth } from '@/hooks/use-auth'
+import { useNotifications } from '@/hooks/use-notifications'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,12 +46,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Users } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState('all')
   const { contacts } = useContactsStore()
   const { user, signOut, isAdmin } = useAuth()
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications()
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isCsvOpen, setIsCsvOpen] = useState(false)
@@ -61,7 +66,6 @@ export default function Index() {
   >(undefined)
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board')
 
-  // Advanced Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [filterScore, setFilterScore] = useState('all')
   const [filterProduct, setFilterProduct] = useState('all')
@@ -76,42 +80,30 @@ export default function Index() {
     setIsFormOpen(true)
   }
 
-  // Filter Logic
   const filteredContacts = contacts.filter((c) => {
     const searchString =
       `${c.firstName} ${c.lastName || ''} ${c.email} ${c.cpf || ''}`.toLowerCase()
-    const matchesSearch = searchString.includes(searchTerm.toLowerCase())
-
-    if (!matchesSearch) return false
-
+    if (!searchString.includes(searchTerm.toLowerCase())) return false
     if (filterProduct !== 'all' && c.produto_interesse !== filterProduct)
       return false
-
     if (filterScore !== 'all') {
       const score = c.leadScore || 0
       if (filterScore === 'high' && score < 80) return false
       if (filterScore === 'medium' && (score < 50 || score >= 80)) return false
       if (filterScore === 'low' && score >= 50) return false
     }
-
-    switch (activeTab) {
-      case 'all':
-        return true
-      case 'subscriber':
-        return c.status === 'subscriber'
-      case 'lead':
-        return c.status === 'lead'
-      case 'mql':
-        return c.status === 'marketing_qualified_lead'
-      case 'sql':
-        return c.status === 'sales_qualified_lead'
-      case 'opportunity':
-        return c.status === 'opportunity'
-      case 'customer':
-        return c.status === 'customer'
-      default:
-        return true
+    if (activeTab !== 'all') {
+      const statusMap: any = {
+        subscriber: 'subscriber',
+        lead: 'lead',
+        mql: 'marketing_qualified_lead',
+        sql: 'sales_qualified_lead',
+        opportunity: 'opportunity',
+        customer: 'customer',
+      }
+      if (c.status !== statusMap[activeTab]) return false
     }
+    return true
   })
 
   return (
@@ -128,7 +120,6 @@ export default function Index() {
         contact={viewingContactDetails}
       />
 
-      {/* CRM Top Header */}
       <header className="h-20 px-6 border-b border-border flex items-center justify-between bg-card sticky top-0 z-20 flex-shrink-0 shadow-sm">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -144,17 +135,73 @@ export default function Index() {
             variant="ghost"
             className="hidden sm:flex gap-2 text-sm text-primary hover:text-primary hover:bg-primary/10 px-3 rounded-md font-semibold"
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" />{' '}
             {isAdmin ? 'Visão Admin' : 'Visão Vendedor'}
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground hover:text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-80 p-0 shadow-lg border-border"
+            >
+              <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
+                <h4 className="font-semibold text-sm">Notificações</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[10px] h-6 px-2"
+                  onClick={markAllAsRead}
+                >
+                  Marcar lidas
+                </Button>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    Você não possui notificações.
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={cn(
+                        'p-3 border-b border-border flex flex-col gap-1 cursor-pointer transition-colors hover:bg-muted/50',
+                        !n.read && 'bg-primary/5',
+                      )}
+                      onClick={() => markAsRead(n.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-semibold leading-tight text-foreground">
+                          {n.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(n.created_at), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground line-clamp-2">
+                        {n.message}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <div className="h-6 w-[1px] bg-border mx-2 hidden sm:block"></div>
 
@@ -190,7 +237,6 @@ export default function Index() {
         </div>
       </header>
 
-      {/* CRM Content */}
       <div className="flex-1 flex flex-col overflow-y-auto pb-16">
         <div
           className={cn(
@@ -198,7 +244,6 @@ export default function Index() {
             viewMode === 'board' && 'h-full flex flex-col',
           )}
         >
-          {/* Tabs Section */}
           <div className="flex flex-col space-y-4 mb-6 flex-shrink-0">
             <Tabs
               value={activeTab}
@@ -248,7 +293,6 @@ export default function Index() {
             </Tabs>
           </div>
 
-          {/* Toolbar */}
           <div className="flex flex-col space-y-4 flex-shrink-0 mb-4">
             <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
               <div className="flex items-center w-full xl:w-auto flex-1 gap-2">
@@ -258,10 +302,9 @@ export default function Index() {
                     placeholder="Busca por nome, e-mail ou CPF..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 h-10 bg-card border-border rounded-lg shadow-sm"
+                    className="pl-9 h-10 bg-card"
                   />
                 </div>
-
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -284,58 +327,42 @@ export default function Index() {
                   <PopoverContent className="w-80" align="start">
                     <div className="grid gap-4">
                       <div className="space-y-2">
-                        <h4 className="font-medium leading-none">
-                          Filtros Avançados
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Refine sua visualização de leads.
-                        </p>
+                        <h4 className="font-medium">Filtros Avançados</h4>
                       </div>
                       <div className="grid gap-2">
-                        <div className="flex flex-col gap-1">
-                          <Label htmlFor="score">Lead Score</Label>
-                          <Select
-                            value={filterScore}
-                            onValueChange={setFilterScore}
-                          >
-                            <SelectTrigger id="score">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              <SelectItem value="high">Alto (80+)</SelectItem>
-                              <SelectItem value="medium">
-                                Médio (50-79)
-                              </SelectItem>
-                              <SelectItem value="low">
-                                Baixo (&lt;50)
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex flex-col gap-1 mt-2">
-                          <Label htmlFor="product">Produto</Label>
-                          <Select
-                            value={filterProduct}
-                            onValueChange={setFilterProduct}
-                          >
-                            <SelectTrigger id="product">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              <SelectItem value="Seguro Auto">
-                                Seguro Auto
-                              </SelectItem>
-                              <SelectItem value="Consórcio">
-                                Consórcio
-                              </SelectItem>
-                              <SelectItem value="Seguro Empresarial">
-                                Seguro Empresarial
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Label>Lead Score</Label>
+                        <Select
+                          value={filterScore}
+                          onValueChange={setFilterScore}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="high">Alto (80+)</SelectItem>
+                            <SelectItem value="medium">
+                              Médio (50-79)
+                            </SelectItem>
+                            <SelectItem value="low">Baixo (&lt;50)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Label className="mt-2">Produto</Label>
+                        <Select
+                          value={filterProduct}
+                          onValueChange={setFilterProduct}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="Seguro Auto">
+                              Seguro Auto
+                            </SelectItem>
+                            <SelectItem value="Consórcio">Consórcio</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button
                         variant="ghost"
@@ -345,62 +372,41 @@ export default function Index() {
                           setFilterProduct('all')
                         }}
                       >
-                        <X className="mr-2 h-4 w-4" /> Limpar Filtros
+                        Limpar Filtros
                       </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
               </div>
-
               <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 gap-2 bg-card rounded-lg border-border hover:bg-muted text-foreground shadow-sm"
-                    >
-                      {viewMode === 'table' ? (
-                        <TableIcon className="h-4 w-4 text-primary" />
-                      ) : (
-                        <LayoutDashboard className="h-4 w-4 text-primary" />
-                      )}
-                      <span className="hidden lg:inline font-medium">
-                        {viewMode === 'table' ? 'Tabela' : 'Quadro'}
-                      </span>
-                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setViewMode('table')}
-                      className="cursor-pointer"
-                    >
-                      <TableIcon className="mr-2 h-4 w-4" /> Exibição de tabela
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setViewMode('board')}
-                      className="cursor-pointer"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> Exibição de
-                      quadro
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setViewMode(viewMode === 'table' ? 'board' : 'table')
+                  }
+                  className="h-10 gap-2 bg-card"
+                >
+                  {viewMode === 'table' ? (
+                    <TableIcon className="h-4 w-4 text-primary" />
+                  ) : (
+                    <LayoutDashboard className="h-4 w-4 text-primary" />
+                  )}
+                  <span className="hidden lg:inline font-medium">
+                    {viewMode === 'table' ? 'Tabela' : 'Quadro'}
+                  </span>
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsCsvOpen(true)}
-                  className="h-10 gap-2 bg-card rounded-lg border-border hover:bg-muted shadow-sm"
+                  className="h-10 gap-2 bg-card"
                 >
-                  <Upload className="h-4 w-4 text-muted-foreground" /> Importar
-                  CSV
+                  <Upload className="h-4 w-4" /> Importar CSV
                 </Button>
-
                 <Button
                   onClick={handleCreateContact}
-                  className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 ml-auto xl:ml-2 shadow-sm rounded-lg font-bold px-6"
+                  className="h-10 gap-2 font-bold px-6"
                 >
                   <Plus className="h-4 w-4" /> Adicionar Contato
                 </Button>
@@ -408,7 +414,6 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Main Content Area */}
           <div className={cn('mt-2 flex-1', viewMode === 'board' && 'min-h-0')}>
             {filteredContacts.length === 0 ? (
               <div className="flex-1 min-h-[400px] flex items-center justify-center bg-muted/30 rounded-xl border border-dashed border-border relative overflow-hidden group">
@@ -416,17 +421,16 @@ export default function Index() {
                   <div className="h-20 w-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                     <Users className="h-10 w-10" />
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground leading-tight font-display">
+                  <h2 className="text-2xl font-bold">
                     Nenhum contato encontrado
                   </h2>
-                  <p className="text-muted-foreground max-w-md">
-                    Adicione novos contatos ou ajuste seus filtros para
-                    visualizar o pipeline.
+                  <p className="text-muted-foreground">
+                    Adicione novos contatos ou ajuste seus filtros.
                   </p>
                   <Button
                     onClick={handleCreateContact}
                     size="lg"
-                    className="mt-4 font-bold bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="mt-4 font-bold"
                   >
                     Criar Primeiro Contato
                   </Button>
