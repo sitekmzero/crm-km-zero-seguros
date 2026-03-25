@@ -27,11 +27,11 @@ export function ChatSidebar({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="p-4 flex items-center justify-center h-20 border-b border-sidebar-border flex-shrink-0 bg-sidebar-accent/30">
+      <div className="p-4 flex items-center justify-center h-28 border-b border-sidebar-border flex-shrink-0 bg-sidebar-accent/30">
         <img
-          src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Imagem/Logo%20km%20zero%20fundo%20branco%20transparente%20site.svg"
+          src="https://lxfdqudvexpktlesfkro.supabase.co/storage/v1/object/public/Logos/Corretora/Logo%20vertical%20fundo%20azul%20transparente%20site.png"
           alt="Km Zero Seguros"
-          className="h-10 w-auto object-contain transition-transform hover:scale-105 cursor-pointer"
+          className="h-20 w-auto object-contain transition-transform hover:scale-105 cursor-pointer"
         />
       </div>
 

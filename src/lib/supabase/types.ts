@@ -546,29 +546,41 @@ export type Database = {
         Row: {
           body: string
           created_at: string | null
+          created_by: string | null
           delay_hours: number | null
           id: string
           name: string
           stage: string | null
+          status: string | null
           subject: string
+          updated_at: string | null
+          variables_used: string[] | null
         }
         Insert: {
           body: string
           created_at?: string | null
+          created_by?: string | null
           delay_hours?: number | null
           id?: string
           name: string
           stage?: string | null
+          status?: string | null
           subject: string
+          updated_at?: string | null
+          variables_used?: string[] | null
         }
         Update: {
           body?: string
           created_at?: string | null
+          created_by?: string | null
           delay_hours?: number | null
           id?: string
           name?: string
           stage?: string | null
+          status?: string | null
           subject?: string
+          updated_at?: string | null
+          variables_used?: string[] | null
         }
         Relationships: []
       }
@@ -1517,6 +1529,10 @@ export const Constants = {
 //   stage: text (nullable)
 //   delay_hours: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (nullable, default: now())
+//   status: text (nullable, default: 'publicado'::text)
+//   updated_at: timestamp with time zone (nullable, default: now())
+//   created_by: uuid (nullable)
+//   variables_used: _text (nullable)
 // Table: forum_posts
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1726,6 +1742,7 @@ export const Constants = {
 //   FOREIGN KEY email_logs_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   PRIMARY KEY email_logs_pkey: PRIMARY KEY (id)
 // Table: email_templates
+//   FOREIGN KEY email_templates_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id)
 //   PRIMARY KEY email_templates_pkey: PRIMARY KEY (id)
 // Table: forum_posts
 //   PRIMARY KEY forum_posts_pkey: PRIMARY KEY (id)
@@ -1867,9 +1884,14 @@ export const Constants = {
 //   Policy "admins_all_logs" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 // Table: email_templates
-//   Policy "Templates All" (ALL, PERMISSIVE) roles={authenticated}
+//   Policy "Admins can delete templates" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
+//   Policy "Admins can insert templates" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
+//   Policy "Admins can update templates" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
+//   Policy "Anyone can read templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
-//     WITH CHECK: true
 // Table: forum_posts
 //   Policy "Forum posts are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true

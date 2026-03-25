@@ -24,9 +24,9 @@ export default function Layout() {
       <div className="md:hidden fixed top-0 left-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center">
           <img
-            src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Imagem/Logo%20km%20zero%20fundo%20branco%20transparente%20site.svg"
+            src="https://lxfdqudvexpktlesfkro.supabase.co/storage/v1/object/public/Logos/Corretora/Logo%20vertical%20fundo%20azul%20transparente%20site.png"
             alt="Km Zero"
-            className="h-8 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
         </div>
         <Sheet>

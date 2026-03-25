@@ -51,9 +51,9 @@ export default function Login() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <div className="mb-8">
         <img
-          src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Imagem/Logo%20km%20zero%20fundo%20branco%20transparente%20site.svg"
+          src="https://lxfdqudvexpktlesfkro.supabase.co/storage/v1/object/public/Logos/Corretora/Logo%20vertical%20fundo%20azul%20transparente%20site.png"
           alt="Km Zero Seguros"
-          className="h-20 w-auto object-contain"
+          className="h-32 w-auto object-contain"
         />
       </div>
       <div className="w-full max-w-md p-8 bg-card rounded-xl shadow-elevation border border-border">
