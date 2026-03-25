@@ -16,6 +16,11 @@
     "crisp-webhook": 1,
     "enviar-otp": 1,
     "notificar-venda": 1,
-    "daily-followup": 1
+    "daily-followup": 1,
+    "webhook-whatsapp": 1,
+    "site-lead-capture": 1,
+    "site-quotation-capture": 1,
+    "site-quotation-response": 1,
+    "assign-lead": 1
   }
 }
