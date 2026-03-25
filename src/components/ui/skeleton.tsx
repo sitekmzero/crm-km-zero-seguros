@@ -1,4 +1,5 @@
-/* Skeleton Component - A component that displays a skeleton (a component that displays a loading state) - from shadcn/ui (exposes Skeleton) */
+/* Skeleton Component - A component that displays a placeholder while content is loading - from shadcn/ui */
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function Skeleton({

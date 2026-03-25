@@ -7,15 +7,14 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { contact_id } = await req.json()
+    const { contact_id, produto } = await req.json()
     if (!contact_id) throw new Error('contact_id is required')
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch active vendors
+    // Fetch active vendors and their configs
     const { data: vendors, error: vErr } = await supabase
       .from('user_profiles')
       .select('id')
@@ -27,28 +26,56 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Logic: find vendor with least active leads (status = lead or mql)
+    const { data: vendorConfigs } = await supabase
+      .from('vendor_config')
+      .select('user_id, specialties')
+
+    // Fetch contacts to calculate load
     const { data: contactsData } = await supabase
       .from('contacts')
-      .select('proprietario_id')
-      .in('status', ['lead', 'marketing_qualified_lead'])
+      .select('proprietario_id, status')
 
-    const leadCount: Record<string, number> = {}
-    vendors.forEach((v) => (leadCount[v.id] = 0))
+    const vendorStats: Record<
+      string,
+      { activeLeads: number; specialties: string[]; isSpecialist: boolean }
+    > = {}
 
-    contactsData?.forEach((c) => {
-      if (c.proprietario_id && leadCount[c.proprietario_id] !== undefined) {
-        leadCount[c.proprietario_id]++
+    vendors.forEach((v) => {
+      const config = vendorConfigs?.find((c) => c.user_id === v.id)
+      vendorStats[v.id] = {
+        activeLeads: 0,
+        specialties: config?.specialties || [],
+        isSpecialist: config?.specialties?.includes(produto) || false,
       }
     })
 
-    // Find the one with minimum
+    contactsData?.forEach((c) => {
+      if (c.proprietario_id && vendorStats[c.proprietario_id] !== undefined) {
+        if (
+          ['lead', 'marketing_qualified_lead', 'sales_qualified_lead'].includes(
+            c.status,
+          )
+        ) {
+          vendorStats[c.proprietario_id].activeLeads++
+        }
+      }
+    })
+
+    // Intelligent Assignment Logic
+    // 1. Prioritize specialist
+    // 2. Tie-break with lowest active leads load
     let selectedVendorId = vendors[0].id
-    let minLeads = leadCount[selectedVendorId]
+    let bestScore = -999999
 
     for (const vendor of vendors) {
-      if (leadCount[vendor.id] < minLeads) {
-        minLeads = leadCount[vendor.id]
+      const stats = vendorStats[vendor.id]
+      let score = 0
+
+      if (stats.isSpecialist) score += 1000 // heavy weight for specialist
+      score -= stats.activeLeads // subtract load
+
+      if (score > bestScore) {
+        bestScore = score
         selectedVendorId = vendor.id
       }
     }
@@ -59,7 +86,14 @@ Deno.serve(async (req: Request) => {
       .update({ proprietario_id: selectedVendorId })
       .eq('id', contact_id)
 
-    // Optionally notify the vendor via email
+    // Notify Vendor
+    await supabase.from('app_notifications').insert({
+      user_id: selectedVendorId,
+      title: 'Novo Lead Atribuído',
+      message:
+        'Um novo lead foi atribuído a você pelo sistema de distribuição inteligente.',
+      type: 'info',
+    })
 
     return new Response(
       JSON.stringify({ success: true, assignedTo: selectedVendorId }),

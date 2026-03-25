@@ -4,14 +4,13 @@ import {
   Plus,
   Bell,
   Sparkles,
-  Filter,
   ChevronDown,
-  ListFilter,
-  Copy,
   LayoutDashboard,
   Table as TableIcon,
   LogOut,
   Upload,
+  Filter,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,6 +31,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Users } from 'lucide-react'
 
 export default function Index() {
@@ -48,7 +60,11 @@ export default function Index() {
     Contact | undefined
   >(undefined)
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board')
+
+  // Advanced Filters
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterScore, setFilterScore] = useState('all')
+  const [filterProduct, setFilterProduct] = useState('all')
 
   const handleCreateContact = () => {
     setContactToEdit(undefined)
@@ -67,6 +83,16 @@ export default function Index() {
     const matchesSearch = searchString.includes(searchTerm.toLowerCase())
 
     if (!matchesSearch) return false
+
+    if (filterProduct !== 'all' && c.produto_interesse !== filterProduct)
+      return false
+
+    if (filterScore !== 'all') {
+      const score = c.leadScore || 0
+      if (filterScore === 'high' && score < 80) return false
+      if (filterScore === 'medium' && (score < 50 || score >= 80)) return false
+      if (filterScore === 'low' && score >= 50) return false
+    }
 
     switch (activeTab) {
       case 'all':
@@ -232,9 +258,98 @@ export default function Index() {
                     placeholder="Busca por nome, e-mail ou CPF..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 h-10 bg-card border-border rounded-lg focus-visible:ring-1 focus-visible:ring-primary shadow-sm"
+                    className="pl-9 h-10 bg-card border-border rounded-lg shadow-sm"
                   />
                 </div>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'h-10 gap-2 shadow-sm',
+                        (filterScore !== 'all' || filterProduct !== 'all') &&
+                          'bg-primary/5 border-primary/20 text-primary',
+                      )}
+                    >
+                      <Filter className="h-4 w-4" />
+                      <span className="hidden sm:inline">Filtros</span>
+                      {(filterScore !== 'all' || filterProduct !== 'all') && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                          !
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start">
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">
+                          Filtros Avançados
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Refine sua visualização de leads.
+                        </p>
+                      </div>
+                      <div className="grid gap-2">
+                        <div className="flex flex-col gap-1">
+                          <Label htmlFor="score">Lead Score</Label>
+                          <Select
+                            value={filterScore}
+                            onValueChange={setFilterScore}
+                          >
+                            <SelectTrigger id="score">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="high">Alto (80+)</SelectItem>
+                              <SelectItem value="medium">
+                                Médio (50-79)
+                              </SelectItem>
+                              <SelectItem value="low">
+                                Baixo (&lt;50)
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex flex-col gap-1 mt-2">
+                          <Label htmlFor="product">Produto</Label>
+                          <Select
+                            value={filterProduct}
+                            onValueChange={setFilterProduct}
+                          >
+                            <SelectTrigger id="product">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="Seguro Auto">
+                                Seguro Auto
+                              </SelectItem>
+                              <SelectItem value="Consórcio">
+                                Consórcio
+                              </SelectItem>
+                              <SelectItem value="Seguro Empresarial">
+                                Seguro Empresarial
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        className="w-full text-muted-foreground"
+                        onClick={() => {
+                          setFilterScore('all')
+                          setFilterProduct('all')
+                        }}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Limpar Filtros
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
@@ -295,18 +410,18 @@ export default function Index() {
 
           {/* Main Content Area */}
           <div className={cn('mt-2 flex-1', viewMode === 'board' && 'min-h-0')}>
-            {contacts.length === 0 && !searchTerm ? (
+            {filteredContacts.length === 0 ? (
               <div className="flex-1 min-h-[400px] flex items-center justify-center bg-muted/30 rounded-xl border border-dashed border-border relative overflow-hidden group">
                 <div className="z-10 flex flex-col items-center justify-center max-w-2xl mx-auto w-full gap-6 p-8 text-center">
                   <div className="h-20 w-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                     <Users className="h-10 w-10" />
                   </div>
                   <h2 className="text-2xl font-bold text-foreground leading-tight font-display">
-                    Seu CRM está pronto para começar
+                    Nenhum contato encontrado
                   </h2>
                   <p className="text-muted-foreground max-w-md">
-                    Adicione seu primeiro contato ou conecte suas origens de
-                    leads para preencher o pipeline automaticamente.
+                    Adicione novos contatos ou ajuste seus filtros para
+                    visualizar o pipeline.
                   </p>
                   <Button
                     onClick={handleCreateContact}

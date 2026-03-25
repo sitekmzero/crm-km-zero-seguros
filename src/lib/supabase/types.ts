@@ -150,6 +150,60 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          cep: string | null
+          company_name: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_activity_date: string
+          last_name: string | null
+          modelo_captura: string | null
+          observacoes: string | null
+          phone: string | null
+          produto_interesse: string | null
+          proprietario_id: string | null
+          status: string
+        }
+        Insert: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_activity_date?: string
+          last_name?: string | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          status?: string
+        }
+        Update: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_activity_date?: string
+          last_name?: string | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       conversion_events: {
         Row: {
           created_at: string | null
@@ -267,6 +321,41 @@ export type Database = {
             columns: ['lead_id']
             isOneToOne: false
             referencedRelation: 'leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      crm_interactions: {
+        Row: {
+          contact_id: string | null
+          data: string
+          descricao: string | null
+          id: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          data?: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          data?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'crm_interactions_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
             referencedColumns: ['id']
           },
         ]
@@ -605,6 +694,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quotations: {
+        Row: {
+          contact_id: string | null
+          dados_cotacao: Json | null
+          data_criacao: string
+          id: string
+          product_id: string | null
+          status: string | null
+          tipo_produto: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          dados_cotacao?: Json | null
+          data_criacao?: string
+          id?: string
+          product_id?: string | null
+          status?: string | null
+          tipo_produto?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          dados_cotacao?: Json | null
+          data_criacao?: string
+          id?: string
+          product_id?: string | null
+          status?: string | null
+          tipo_produto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quotations_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'quotations_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       reactivation_requests: {
         Row: {
           id: string
@@ -701,21 +835,27 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
+          role: string | null
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          role?: string | null
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          role?: string | null
         }
         Relationships: []
       }
@@ -956,6 +1096,22 @@ export const Constants = {
 //   status: text (not null, default: 'active'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   renewal_date: date (nullable)
+// Table: contacts
+//   id: uuid (not null, default: gen_random_uuid())
+//   first_name: text (not null)
+//   last_name: text (nullable)
+//   email: text (nullable)
+//   phone: text (nullable)
+//   company_name: text (nullable)
+//   cpf: text (nullable)
+//   cep: text (nullable)
+//   produto_interesse: text (nullable)
+//   modelo_captura: text (nullable)
+//   observacoes: text (nullable)
+//   status: text (not null, default: 'subscriber'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   last_activity_date: timestamp with time zone (not null, default: now())
+//   proprietario_id: uuid (nullable)
 // Table: conversion_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (nullable)
@@ -985,6 +1141,13 @@ export const Constants = {
 //   quote_value: numeric (nullable)
 //   status: text (nullable, default: 'pending'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: crm_interactions
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   tipo: text (not null)
+//   descricao: text (nullable)
+//   data: timestamp with time zone (not null, default: now())
+//   user_id: uuid (nullable)
 // Table: documents
 //   id: uuid (not null, default: gen_random_uuid())
 //   client_id: uuid (not null)
@@ -1065,6 +1228,14 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   estimated_price: numeric (nullable, default: 0)
 //   image_url: text (nullable)
+// Table: quotations
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   product_id: uuid (nullable)
+//   tipo_produto: text (nullable)
+//   dados_cotacao: jsonb (nullable, default: '{}'::jsonb)
+//   status: text (nullable, default: 'pendente'::text)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: reactivation_requests
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_email: text (not null)
@@ -1095,6 +1266,8 @@ export const Constants = {
 //   full_name: text (nullable)
 //   is_admin: boolean (nullable, default: false)
 //   created_at: timestamp with time zone (nullable, default: now())
+//   role: text (nullable, default: 'vendedor'::text)
+//   email: text (nullable)
 // Table: vendas_online
 //   id: uuid (not null, default: gen_random_uuid())
 //   cliente_id: uuid (nullable)
@@ -1123,6 +1296,9 @@ export const Constants = {
 //   UNIQUE clients_email_key: UNIQUE (email)
 //   PRIMARY KEY clients_pkey: PRIMARY KEY (id)
 //   CHECK clients_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'active'::text, 'inactive'::text])))
+// Table: contacts
+//   PRIMARY KEY contacts_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY contacts_proprietario_id_fkey: FOREIGN KEY (proprietario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: conversion_events
 //   FOREIGN KEY conversion_events_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY conversion_events_pkey: PRIMARY KEY (id)
@@ -1131,6 +1307,10 @@ export const Constants = {
 // Table: cotacoes
 //   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id)
 //   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
+// Table: crm_interactions
+//   FOREIGN KEY crm_interactions_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY crm_interactions_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY crm_interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: documents
 //   FOREIGN KEY documents_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   CHECK documents_document_type_check: CHECK ((document_type = ANY (ARRAY['apólice'::text, 'documento_pessoal'::text, 'contrato'::text, 'comprovante'::text])))
@@ -1158,6 +1338,10 @@ export const Constants = {
 //   PRIMARY KEY otp_validacoes_pkey: PRIMARY KEY (id)
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
+// Table: quotations
+//   FOREIGN KEY quotations_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY quotations_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY quotations_product_id_fkey: FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 // Table: reactivation_requests
 //   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
 //   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
@@ -1208,6 +1392,10 @@ export const Constants = {
 //   Policy "clients_update_policy" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: contacts
+//   Policy "Contacts All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text))))) OR (proprietario_id = auth.uid()))
+//     WITH CHECK: true
 // Table: conversion_events
 //   Policy "Allow anon insert on conversion_events" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -1218,6 +1406,10 @@ export const Constants = {
 //     USING: true
 // Table: cotacoes
 //   Policy "cotacoes_insert" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: crm_interactions
+//   Policy "Interactions All" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
 //     WITH CHECK: true
 // Table: documents
 //   Policy "Admins can do everything on documents" (ALL, PERMISSIVE) roles={authenticated}
@@ -1268,6 +1460,10 @@ export const Constants = {
 //   Policy "products_select_policy" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
 //   Policy "products_update_policy" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: quotations
+//   Policy "Quotations All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: reactivation_requests

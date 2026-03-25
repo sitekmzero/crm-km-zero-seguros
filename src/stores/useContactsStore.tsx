@@ -32,6 +32,9 @@ export interface Contact {
   modelo_captura?: string
   observacoes?: string
   proprietario_id?: string
+  leadScore?: number
+  probability?: number
+  stageUpdatedAt?: Date
 }
 
 interface ContactsContextType {
@@ -62,6 +65,11 @@ const mapDbToContact = (row: any): Contact => ({
   modelo_captura: row.modelo_captura,
   observacoes: row.observacoes,
   proprietario_id: row.proprietario_id,
+  leadScore: row.lead_score || 0,
+  probability: row.probability || 0,
+  stageUpdatedAt: row.stage_updated_at
+    ? new Date(row.stage_updated_at)
+    : new Date(row.created_at),
 })
 
 export const ContactsProvider = ({ children }: { children: ReactNode }) => {

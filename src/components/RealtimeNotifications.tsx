@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { Bell, RefreshCw, MessageCircle } from 'lucide-react'
+import { Bell, RefreshCw, MessageCircle, AlertTriangle } from 'lucide-react'
 
 export function RealtimeNotifications() {
   const { user } = useAuth()
@@ -41,27 +41,29 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'crm_interactions' },
+        { event: 'INSERT', schema: 'public', table: 'internal_messages' },
         (payload) => {
-          if (
-            payload.new.tipo === 'WhatsApp (Inbound)' ||
-            payload.new.tipo?.includes('WhatsApp')
-          ) {
-            toast('Nova Mensagem WhatsApp', {
-              description: payload.new.descricao,
-              icon: <MessageCircle className="h-4 w-4 text-green-500" />,
+          if (payload.new.user_id !== user.id) {
+            toast('Nova Mensagem no Chat', {
+              description: 'Você tem uma nova mensagem interna em um contato.',
+              icon: <MessageCircle className="h-4 w-4 text-primary" />,
             })
           }
         },
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'quotations' },
+        { event: 'INSERT', schema: 'public', table: 'app_notifications' },
         (payload) => {
-          if (payload.new.status !== payload.old.status) {
-            toast('Cotação Respondida', {
-              description: `Uma cotação mudou para o status: ${payload.new.status}.`,
-              icon: <Bell className="h-4 w-4 text-orange-500" />,
+          if (payload.new.user_id === user.id) {
+            const isUrgent = payload.new.priority === 'high'
+            toast(payload.new.title, {
+              description: payload.new.message,
+              icon: (
+                <AlertTriangle
+                  className={`h-4 w-4 ${isUrgent ? 'text-red-500' : 'text-blue-500'}`}
+                />
+              ),
             })
           }
         },

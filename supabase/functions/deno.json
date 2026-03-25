@@ -9,7 +9,7 @@
     "send-admin-notification": 3,
     "validate-captcha": 3,
     "validate-password": 3,
-    "processar-lead": 3,
+    "processar-lead": 4,
     "submitForm": 2,
     "send-welcome-email": 1,
     "process-renewals": 1,
@@ -17,10 +17,14 @@
     "enviar-otp": 1,
     "notificar-venda": 1,
     "daily-followup": 1,
-    "webhook-whatsapp": 1,
+    "webhook-whatsapp": 2,
     "site-lead-capture": 1,
     "site-quotation-capture": 1,
     "site-quotation-response": 1,
-    "assign-lead": 1
+    "assign-lead": 2,
+    "calculate-lead-score": 1,
+    "process-automations": 1,
+    "gemini-chatbot": 1,
+    "google-calendar-schedule": 1
   }
 }
