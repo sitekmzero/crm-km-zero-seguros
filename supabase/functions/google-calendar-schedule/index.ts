@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
 
     // Log the interaction
     await supabase
-      .schema('crm')
+      .schema('crm' as any)
       .from('crm_interactions')
       .insert({
         contact_id,
@@ -30,8 +30,8 @@ Deno.serve(async (req: Request) => {
       })
 
     // Mock Google Calendar API logic
-    // In a real application, we would retrieve the google calendar token from the database
-    // and make an authenticated POST request to the API
+    // In a real application, we would retrieve 'google_calendar_token' from 'vendor_config'
+    // and make an authenticated POST request to https://www.googleapis.com/calendar/v3/calendars/primary/events
     console.log(`[Google Calendar API Mock] Event created for ${datetime}`)
 
     // Send confirmation email to client

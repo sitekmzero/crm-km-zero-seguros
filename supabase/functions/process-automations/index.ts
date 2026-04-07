@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
     // 2. Fetch Vendor Config for Integrations
     if (record.proprietario_id) {
       const { data: config } = await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('vendor_config')
         .select('*')
         .eq('user_id', record.proprietario_id)
@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
     // 3. Create In-App Notification for urgent changes (e.g. Lead Score > 80 just assigned)
     if (isNew && record.lead_score >= 80 && record.proprietario_id) {
       await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('app_notifications')
         .insert({
           user_id: record.proprietario_id,

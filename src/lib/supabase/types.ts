@@ -36,66 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      app_notifications: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          priority: string | null
-          read: boolean | null
-          title: string
-          type: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          priority?: string | null
-          read?: boolean | null
-          title: string
-          type?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          priority?: string | null
-          read?: boolean | null
-          title?: string
-          type?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      audit_log: {
-        Row: {
-          acao: string
-          data_hora: string
-          descricao: string | null
-          id: string
-          ip_usuario: string | null
-          usuario_id: string | null
-        }
-        Insert: {
-          acao: string
-          data_hora?: string
-          descricao?: string | null
-          id?: string
-          ip_usuario?: string | null
-          usuario_id?: string | null
-        }
-        Update: {
-          acao?: string
-          data_hora?: string
-          descricao?: string | null
-          id?: string
-          ip_usuario?: string | null
-          usuario_id?: string | null
-        }
-        Relationships: []
-      }
       avaliacoes: {
         Row: {
           ativo: boolean | null
@@ -129,6 +69,405 @@ export type Database = {
           nome_cliente?: string
           nota?: number | null
           product_type?: string | null
+        }
+        Relationships: []
+      }
+      backup_app_notifications: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          message: string | null
+          priority: string | null
+          read: boolean | null
+          title: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          priority?: string | null
+          read?: boolean | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          priority?: string | null
+          read?: boolean | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_audit_log: {
+        Row: {
+          acao: string | null
+          data_hora: string | null
+          descricao: string | null
+          id: string | null
+          ip_usuario: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao?: string | null
+          data_hora?: string | null
+          descricao?: string | null
+          id?: string | null
+          ip_usuario?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string | null
+          data_hora?: string | null
+          descricao?: string | null
+          id?: string | null
+          ip_usuario?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_contacts: {
+        Row: {
+          cep: string | null
+          company_name: string | null
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          last_activity_date: string | null
+          last_name: string | null
+          lead_score: number | null
+          modelo_captura: string | null
+          observacoes: string | null
+          phone: string | null
+          probability: number | null
+          produto_interesse: string | null
+          proprietario_id: string | null
+          stage_updated_at: string | null
+          status: string | null
+        }
+        Insert: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_activity_date?: string | null
+          last_name?: string | null
+          lead_score?: number | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          probability?: number | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          stage_updated_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_activity_date?: string | null
+          last_name?: string | null
+          lead_score?: number | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          probability?: number | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          stage_updated_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      backup_crm_interactions: {
+        Row: {
+          contact_id: string | null
+          data: string | null
+          descricao: string | null
+          id: string | null
+          tipo: string | null
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          data?: string | null
+          descricao?: string | null
+          id?: string | null
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          data?: string | null
+          descricao?: string | null
+          id?: string | null
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_documents: {
+        Row: {
+          client_id: string | null
+          contact_id: string | null
+          document_type: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string | null
+          updated_at: string | null
+          uploaded_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          contact_id?: string | null
+          document_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          contact_id?: string | null
+          document_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_forum_posts: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string | null
+          module_id: string | null
+          resolved: boolean | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          resolved?: boolean | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          resolved?: boolean | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_forum_replies: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_correct: boolean | null
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_correct?: boolean | null
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_correct?: boolean | null
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_internal_messages: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string | null
+          message: string | null
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_manual_feedback: {
+        Row: {
+          data: string | null
+          id: string | null
+          mensagem: string | null
+          pagina: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          data?: string | null
+          id?: string | null
+          mensagem?: string | null
+          pagina?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          data?: string | null
+          id?: string | null
+          mensagem?: string | null
+          pagina?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_policies: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          expiration_date: string | null
+          id: string | null
+          issue_date: string | null
+          policy_number: string | null
+          product_type: string | null
+          status: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string | null
+          issue_date?: string | null
+          policy_number?: string | null
+          product_type?: string | null
+          status?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string | null
+          issue_date?: string | null
+          policy_number?: string | null
+          product_type?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      backup_quotations: {
+        Row: {
+          contact_id: string | null
+          dados_cotacao: Json | null
+          data_criacao: string | null
+          id: string | null
+          product_id: string | null
+          status: string | null
+          tipo_produto: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          dados_cotacao?: Json | null
+          data_criacao?: string | null
+          id?: string | null
+          product_id?: string | null
+          status?: string | null
+          tipo_produto?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          dados_cotacao?: Json | null
+          data_criacao?: string | null
+          id?: string | null
+          product_id?: string | null
+          status?: string | null
+          tipo_produto?: string | null
+        }
+        Relationships: []
+      }
+      backup_training_progress: {
+        Row: {
+          completed_at: string | null
+          id: string | null
+          module_id: string | null
+          score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_vendor_config: {
+        Row: {
+          google_calendar_token: Json | null
+          n8n_webhook_url: string | null
+          pipedrive_api_key: string | null
+          specialties: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          google_calendar_token?: Json | null
+          n8n_webhook_url?: string | null
+          pipedrive_api_key?: string | null
+          specialties?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          google_calendar_token?: Json | null
+          n8n_webhook_url?: string | null
+          pipedrive_api_key?: string | null
+          specialties?: string[] | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -206,69 +545,6 @@ export type Database = {
           id?: string
           name?: string
           renewal_date?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
-      contacts: {
-        Row: {
-          cep: string | null
-          company_name: string | null
-          cpf: string | null
-          created_at: string
-          email: string | null
-          first_name: string
-          id: string
-          last_activity_date: string
-          last_name: string | null
-          lead_score: number | null
-          modelo_captura: string | null
-          observacoes: string | null
-          phone: string | null
-          probability: number | null
-          produto_interesse: string | null
-          proprietario_id: string | null
-          stage_updated_at: string | null
-          status: string
-        }
-        Insert: {
-          cep?: string | null
-          company_name?: string | null
-          cpf?: string | null
-          created_at?: string
-          email?: string | null
-          first_name: string
-          id?: string
-          last_activity_date?: string
-          last_name?: string | null
-          lead_score?: number | null
-          modelo_captura?: string | null
-          observacoes?: string | null
-          phone?: string | null
-          probability?: number | null
-          produto_interesse?: string | null
-          proprietario_id?: string | null
-          stage_updated_at?: string | null
-          status?: string
-        }
-        Update: {
-          cep?: string | null
-          company_name?: string | null
-          cpf?: string | null
-          created_at?: string
-          email?: string | null
-          first_name?: string
-          id?: string
-          last_activity_date?: string
-          last_name?: string | null
-          lead_score?: number | null
-          modelo_captura?: string | null
-          observacoes?: string | null
-          phone?: string | null
-          probability?: number | null
-          produto_interesse?: string | null
-          proprietario_id?: string | null
-          stage_updated_at?: string | null
           status?: string
         }
         Relationships: []
@@ -397,41 +673,6 @@ export type Database = {
           },
         ]
       }
-      crm_interactions: {
-        Row: {
-          contact_id: string | null
-          data: string
-          descricao: string | null
-          id: string
-          tipo: string
-          user_id: string | null
-        }
-        Insert: {
-          contact_id?: string | null
-          data?: string
-          descricao?: string | null
-          id?: string
-          tipo: string
-          user_id?: string | null
-        }
-        Update: {
-          contact_id?: string | null
-          data?: string
-          descricao?: string | null
-          id?: string
-          tipo?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'crm_interactions_contact_id_fkey'
-            columns: ['contact_id']
-            isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       depoimentos: {
         Row: {
           created_at: string
@@ -464,47 +705,6 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
-      }
-      documents: {
-        Row: {
-          client_id: string | null
-          contact_id: string | null
-          document_type: string
-          file_name: string
-          file_path: string
-          id: string
-          updated_at: string
-          uploaded_at: string
-        }
-        Insert: {
-          client_id?: string | null
-          contact_id?: string | null
-          document_type: string
-          file_name: string
-          file_path: string
-          id?: string
-          updated_at?: string
-          uploaded_at?: string
-        }
-        Update: {
-          client_id?: string | null
-          contact_id?: string | null
-          document_type?: string
-          file_name?: string
-          file_path?: string
-          id?: string
-          updated_at?: string
-          uploaded_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'documents_contact_id_fkey'
-            columns: ['contact_id']
-            isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
-          },
-        ]
       }
       email_campaigns: {
         Row: {
@@ -706,71 +906,6 @@ export type Database = {
           },
         ]
       }
-      forum_posts: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          module_id: string | null
-          resolved: boolean | null
-          title: string
-          user_id: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          module_id?: string | null
-          resolved?: boolean | null
-          title: string
-          user_id?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          module_id?: string | null
-          resolved?: boolean | null
-          title?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      forum_replies: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          is_correct: boolean | null
-          post_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          is_correct?: boolean | null
-          post_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          is_correct?: boolean | null
-          post_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'forum_replies_post_id_fkey'
-            columns: ['post_id']
-            isOneToOne: false
-            referencedRelation: 'forum_posts'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       interactions: {
         Row: {
           client_id: string | null
@@ -812,38 +947,6 @@ export type Database = {
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'user_profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      internal_messages: {
-        Row: {
-          contact_id: string | null
-          created_at: string | null
-          id: string
-          message: string
-          user_id: string | null
-        }
-        Insert: {
-          contact_id?: string | null
-          created_at?: string | null
-          id?: string
-          message: string
-          user_id?: string | null
-        }
-        Update: {
-          contact_id?: string | null
-          created_at?: string | null
-          id?: string
-          message?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'internal_messages_contact_id_fkey'
-            columns: ['contact_id']
-            isOneToOne: false
-            referencedRelation: 'contacts'
             referencedColumns: ['id']
           },
         ]
@@ -938,30 +1041,6 @@ export type Database = {
         }
         Relationships: []
       }
-      manual_feedback: {
-        Row: {
-          data: string | null
-          id: string
-          mensagem: string | null
-          pagina: string | null
-          usuario_id: string | null
-        }
-        Insert: {
-          data?: string | null
-          id?: string
-          mensagem?: string | null
-          pagina?: string | null
-          usuario_id?: string | null
-        }
-        Update: {
-          data?: string | null
-          id?: string
-          mensagem?: string | null
-          pagina?: string | null
-          usuario_id?: string | null
-        }
-        Relationships: []
-      }
       notificacoes_vendas: {
         Row: {
           created_at: string
@@ -1021,47 +1100,6 @@ export type Database = {
         }
         Relationships: []
       }
-      policies: {
-        Row: {
-          contact_id: string | null
-          created_at: string | null
-          expiration_date: string | null
-          id: string
-          issue_date: string | null
-          policy_number: string | null
-          product_type: string | null
-          status: string | null
-        }
-        Insert: {
-          contact_id?: string | null
-          created_at?: string | null
-          expiration_date?: string | null
-          id?: string
-          issue_date?: string | null
-          policy_number?: string | null
-          product_type?: string | null
-          status?: string | null
-        }
-        Update: {
-          contact_id?: string | null
-          created_at?: string | null
-          expiration_date?: string | null
-          id?: string
-          issue_date?: string | null
-          policy_number?: string | null
-          product_type?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'policies_contact_id_fkey'
-            columns: ['contact_id']
-            isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       products: {
         Row: {
           category: string
@@ -1094,51 +1132,6 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
-      }
-      quotations: {
-        Row: {
-          contact_id: string | null
-          dados_cotacao: Json | null
-          data_criacao: string
-          id: string
-          product_id: string | null
-          status: string | null
-          tipo_produto: string | null
-        }
-        Insert: {
-          contact_id?: string | null
-          dados_cotacao?: Json | null
-          data_criacao?: string
-          id?: string
-          product_id?: string | null
-          status?: string | null
-          tipo_produto?: string | null
-        }
-        Update: {
-          contact_id?: string | null
-          dados_cotacao?: Json | null
-          data_criacao?: string
-          id?: string
-          product_id?: string | null
-          status?: string | null
-          tipo_produto?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'quotations_contact_id_fkey'
-            columns: ['contact_id']
-            isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'quotations_product_id_fkey'
-            columns: ['product_id']
-            isOneToOne: false
-            referencedRelation: 'products'
-            referencedColumns: ['id']
-          },
-        ]
       }
       reactivation_requests: {
         Row: {
@@ -1260,30 +1253,6 @@ export type Database = {
         }
         Relationships: []
       }
-      training_progress: {
-        Row: {
-          completed_at: string | null
-          id: string
-          module_id: string
-          score: number
-          user_id: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          id?: string
-          module_id: string
-          score: number
-          user_id?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          id?: string
-          module_id?: string
-          score?: number
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -1366,30 +1335,6 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
-      }
-      vendor_config: {
-        Row: {
-          google_calendar_token: Json | null
-          n8n_webhook_url: string | null
-          pipedrive_api_key: string | null
-          specialties: string[] | null
-          user_id: string
-        }
-        Insert: {
-          google_calendar_token?: Json | null
-          n8n_webhook_url?: string | null
-          pipedrive_api_key?: string | null
-          specialties?: string[] | null
-          user_id: string
-        }
-        Update: {
-          google_calendar_token?: Json | null
-          n8n_webhook_url?: string | null
-          pipedrive_api_key?: string | null
-          specialties?: string[] | null
-          user_id?: string
-        }
-        Relationships: []
       }
     }
     Views: {
@@ -1545,22 +1490,6 @@ export const Constants = {
 //   user_email: text (not null)
 //   success: boolean (nullable)
 //   login_attempt_time: timestamp with time zone (nullable, default: now())
-// Table: app_notifications
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (nullable)
-//   title: text (not null)
-//   message: text (not null)
-//   type: text (nullable, default: 'info'::text)
-//   priority: text (nullable, default: 'normal'::text)
-//   read: boolean (nullable, default: false)
-//   created_at: timestamp with time zone (nullable, default: now())
-// Table: audit_log
-//   id: uuid (not null, default: gen_random_uuid())
-//   usuario_id: uuid (nullable)
-//   acao: text (not null)
-//   descricao: text (nullable)
-//   ip_usuario: text (nullable)
-//   data_hora: timestamp with time zone (not null, default: now())
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome_cliente: text (not null)
@@ -1571,6 +1500,113 @@ export const Constants = {
 //   avatar_url: text (nullable)
 //   email: text (nullable)
 //   product_type: text (nullable, default: 'outro'::text)
+// Table: backup_app_notifications
+//   id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   title: text (nullable)
+//   message: text (nullable)
+//   type: text (nullable)
+//   priority: text (nullable)
+//   read: boolean (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: backup_audit_log
+//   id: uuid (nullable)
+//   usuario_id: uuid (nullable)
+//   acao: text (nullable)
+//   descricao: text (nullable)
+//   ip_usuario: text (nullable)
+//   data_hora: timestamp with time zone (nullable)
+// Table: backup_contacts
+//   id: uuid (nullable)
+//   first_name: text (nullable)
+//   last_name: text (nullable)
+//   email: text (nullable)
+//   phone: text (nullable)
+//   company_name: text (nullable)
+//   cpf: text (nullable)
+//   cep: text (nullable)
+//   produto_interesse: text (nullable)
+//   modelo_captura: text (nullable)
+//   observacoes: text (nullable)
+//   status: text (nullable)
+//   created_at: timestamp with time zone (nullable)
+//   last_activity_date: timestamp with time zone (nullable)
+//   proprietario_id: uuid (nullable)
+//   lead_score: integer (nullable)
+//   probability: integer (nullable)
+//   stage_updated_at: timestamp with time zone (nullable)
+// Table: backup_crm_interactions
+//   id: uuid (nullable)
+//   contact_id: uuid (nullable)
+//   tipo: text (nullable)
+//   descricao: text (nullable)
+//   data: timestamp with time zone (nullable)
+//   user_id: uuid (nullable)
+// Table: backup_documents
+//   id: uuid (nullable)
+//   client_id: uuid (nullable)
+//   file_name: text (nullable)
+//   file_path: text (nullable)
+//   document_type: text (nullable)
+//   uploaded_at: timestamp with time zone (nullable)
+//   updated_at: timestamp with time zone (nullable)
+//   contact_id: uuid (nullable)
+// Table: backup_forum_posts
+//   id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   module_id: text (nullable)
+//   title: text (nullable)
+//   content: text (nullable)
+//   resolved: boolean (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: backup_forum_replies
+//   id: uuid (nullable)
+//   post_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   content: text (nullable)
+//   is_correct: boolean (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: backup_internal_messages
+//   id: uuid (nullable)
+//   contact_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   message: text (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: backup_manual_feedback
+//   id: uuid (nullable)
+//   usuario_id: uuid (nullable)
+//   pagina: text (nullable)
+//   mensagem: text (nullable)
+//   data: timestamp with time zone (nullable)
+// Table: backup_policies
+//   id: uuid (nullable)
+//   contact_id: uuid (nullable)
+//   policy_number: text (nullable)
+//   product_type: text (nullable)
+//   issue_date: date (nullable)
+//   expiration_date: date (nullable)
+//   status: text (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: backup_quotations
+//   id: uuid (nullable)
+//   contact_id: uuid (nullable)
+//   product_id: uuid (nullable)
+//   tipo_produto: text (nullable)
+//   dados_cotacao: jsonb (nullable)
+//   status: text (nullable)
+//   data_criacao: timestamp with time zone (nullable)
+// Table: backup_training_progress
+//   id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   module_id: text (nullable)
+//   score: integer (nullable)
+//   completed_at: timestamp with time zone (nullable)
+// Table: backup_vendor_config
+//   user_id: uuid (nullable)
+//   specialties: _text (nullable)
+//   n8n_webhook_url: text (nullable)
+//   pipedrive_api_key: text (nullable)
+//   google_calendar_token: jsonb (nullable)
 // Table: candidatos
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1591,25 +1627,6 @@ export const Constants = {
 //   status: text (not null, default: 'active'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   renewal_date: date (nullable)
-// Table: contacts
-//   id: uuid (not null, default: gen_random_uuid())
-//   first_name: text (not null)
-//   last_name: text (nullable)
-//   email: text (nullable)
-//   phone: text (nullable)
-//   company_name: text (nullable)
-//   cpf: text (nullable)
-//   cep: text (nullable)
-//   produto_interesse: text (nullable)
-//   modelo_captura: text (nullable)
-//   observacoes: text (nullable)
-//   status: text (not null, default: 'subscriber'::text)
-//   created_at: timestamp with time zone (not null, default: now())
-//   last_activity_date: timestamp with time zone (not null, default: now())
-//   proprietario_id: uuid (nullable)
-//   lead_score: integer (nullable, default: 0)
-//   probability: integer (nullable, default: 0)
-//   stage_updated_at: timestamp with time zone (nullable, default: now())
 // Table: conversion_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (nullable)
@@ -1640,13 +1657,6 @@ export const Constants = {
 //   quote_value: numeric (nullable)
 //   status: text (nullable, default: 'pending'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
-// Table: crm_interactions
-//   id: uuid (not null, default: gen_random_uuid())
-//   contact_id: uuid (nullable)
-//   tipo: text (not null)
-//   descricao: text (nullable)
-//   data: timestamp with time zone (not null, default: now())
-//   user_id: uuid (nullable)
 // Table: depoimentos
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1656,15 +1666,6 @@ export const Constants = {
 //   rating: integer (nullable)
 //   status: text (nullable, default: 'ativo'::text)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: documents
-//   id: uuid (not null, default: gen_random_uuid())
-//   client_id: uuid (nullable)
-//   file_name: text (not null)
-//   file_path: text (not null)
-//   document_type: text (not null)
-//   uploaded_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
-//   contact_id: uuid (nullable)
 // Table: email_campaigns
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1712,21 +1713,6 @@ export const Constants = {
 //   pontos_usados: integer (nullable, default: 0)
 //   nivel: text (nullable, default: 'Bronze'::text)
 //   data_criacao: timestamp with time zone (not null, default: now())
-// Table: forum_posts
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (nullable)
-//   module_id: text (nullable)
-//   title: text (not null)
-//   content: text (not null)
-//   resolved: boolean (nullable, default: false)
-//   created_at: timestamp with time zone (nullable, default: now())
-// Table: forum_replies
-//   id: uuid (not null, default: gen_random_uuid())
-//   post_id: uuid (nullable)
-//   user_id: uuid (nullable)
-//   content: text (not null)
-//   is_correct: boolean (nullable, default: false)
-//   created_at: timestamp with time zone (nullable, default: now())
 // Table: interactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   client_id: uuid (nullable)
@@ -1735,12 +1721,6 @@ export const Constants = {
 //   notes: text (nullable)
 //   interaction_date: timestamp with time zone (nullable, default: now())
 //   next_follow_up: date (nullable)
-// Table: internal_messages
-//   id: uuid (not null, default: gen_random_uuid())
-//   contact_id: uuid (nullable)
-//   user_id: uuid (nullable)
-//   message: text (not null)
-//   created_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (nullable)
@@ -1769,12 +1749,6 @@ export const Constants = {
 //   metadata: jsonb (nullable, default: '{}'::jsonb)
 //   person_type: text (nullable)
 //   cnpj: text (nullable)
-// Table: manual_feedback
-//   id: uuid (not null, default: gen_random_uuid())
-//   usuario_id: uuid (nullable)
-//   pagina: text (nullable)
-//   mensagem: text (nullable)
-//   data: timestamp with time zone (nullable, default: now())
 // Table: notificacoes_vendas
 //   id: uuid (not null, default: gen_random_uuid())
 //   venda_id: uuid (nullable)
@@ -1788,15 +1762,6 @@ export const Constants = {
 //   expires_at: timestamp with time zone (not null)
 //   used: boolean (nullable, default: false)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: policies
-//   id: uuid (not null, default: gen_random_uuid())
-//   contact_id: uuid (nullable)
-//   policy_number: text (nullable)
-//   product_type: text (nullable)
-//   issue_date: date (nullable)
-//   expiration_date: date (nullable)
-//   status: text (nullable, default: 'active'::text)
-//   created_at: timestamp with time zone (nullable, default: now())
 // Table: products
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1806,14 +1771,6 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   estimated_price: numeric (nullable, default: 0)
 //   image_url: text (nullable)
-// Table: quotations
-//   id: uuid (not null, default: gen_random_uuid())
-//   contact_id: uuid (nullable)
-//   product_id: uuid (nullable)
-//   tipo_produto: text (nullable)
-//   dados_cotacao: jsonb (nullable, default: '{}'::jsonb)
-//   status: text (nullable, default: 'pendente'::text)
-//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: reactivation_requests
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_email: text (not null)
@@ -1846,12 +1803,6 @@ export const Constants = {
 //   icone: text (nullable)
 //   ativo: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: training_progress
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (nullable)
-//   module_id: text (not null)
-//   score: integer (not null)
-//   completed_at: timestamp with time zone (nullable, default: now())
 // Table: user_profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
@@ -1873,22 +1824,10 @@ export const Constants = {
 //   data_proposta: timestamp with time zone (nullable)
 //   data_emissao: timestamp with time zone (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: vendor_config
-//   user_id: uuid (not null)
-//   specialties: _text (nullable)
-//   n8n_webhook_url: text (nullable)
-//   pipedrive_api_key: text (nullable)
-//   google_calendar_token: jsonb (nullable)
 
 // --- CONSTRAINTS ---
 // Table: access_logs
 //   PRIMARY KEY access_logs_pkey: PRIMARY KEY (id)
-// Table: app_notifications
-//   PRIMARY KEY app_notifications_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY app_notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-// Table: audit_log
-//   PRIMARY KEY audit_log_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY audit_log_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: avaliacoes
 //   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
@@ -1900,9 +1839,6 @@ export const Constants = {
 //   UNIQUE clients_email_key: UNIQUE (email)
 //   PRIMARY KEY clients_pkey: PRIMARY KEY (id)
 //   CHECK clients_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'active'::text, 'inactive'::text])))
-// Table: contacts
-//   PRIMARY KEY contacts_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY contacts_proprietario_id_fkey: FOREIGN KEY (proprietario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: conversion_events
 //   FOREIGN KEY conversion_events_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY conversion_events_pkey: PRIMARY KEY (id)
@@ -1911,17 +1847,9 @@ export const Constants = {
 // Table: cotacoes
 //   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id)
 //   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
-// Table: crm_interactions
-//   FOREIGN KEY crm_interactions_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-//   PRIMARY KEY crm_interactions_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY crm_interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: depoimentos
 //   PRIMARY KEY depoimentos_pkey: PRIMARY KEY (id)
 //   CHECK depoimentos_rating_check: CHECK (((rating >= 1) AND (rating <= 5)))
-// Table: documents
-//   FOREIGN KEY documents_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-//   CHECK documents_document_type_check: CHECK ((document_type = ANY (ARRAY['apólice'::text, 'documento_pessoal'::text, 'contrato'::text, 'comprovante'::text])))
-//   PRIMARY KEY documents_pkey: PRIMARY KEY (id)
 // Table: email_campaigns
 //   PRIMARY KEY email_campaigns_pkey: PRIMARY KEY (id)
 //   CHECK email_campaigns_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
@@ -1940,42 +1868,21 @@ export const Constants = {
 // Table: fidelizacao
 //   FOREIGN KEY fidelizacao_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clients(id)
 //   PRIMARY KEY fidelizacao_pkey: PRIMARY KEY (id)
-// Table: forum_posts
-//   PRIMARY KEY forum_posts_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY forum_posts_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-// Table: forum_replies
-//   PRIMARY KEY forum_replies_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY forum_replies_post_id_fkey: FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE
-//   FOREIGN KEY forum_replies_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: interactions
 //   FOREIGN KEY interactions_client_id_fkey: FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 //   CHECK interactions_interaction_type_check: CHECK ((interaction_type = ANY (ARRAY['chamada'::text, 'email'::text, 'mensagem'::text, 'visita'::text])))
 //   PRIMARY KEY interactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE SET NULL
-// Table: internal_messages
-//   FOREIGN KEY internal_messages_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-//   PRIMARY KEY internal_messages_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY internal_messages_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
-// Table: manual_feedback
-//   PRIMARY KEY manual_feedback_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY manual_feedback_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: notificacoes_vendas
 //   PRIMARY KEY notificacoes_vendas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY notificacoes_vendas_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas_online(id)
 // Table: otp_validacoes
 //   PRIMARY KEY otp_validacoes_pkey: PRIMARY KEY (id)
-// Table: policies
-//   FOREIGN KEY policies_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-//   PRIMARY KEY policies_pkey: PRIMARY KEY (id)
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
-// Table: quotations
-//   FOREIGN KEY quotations_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-//   PRIMARY KEY quotations_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY quotations_product_id_fkey: FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 // Table: reactivation_requests
 //   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
 //   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
@@ -1986,10 +1893,6 @@ export const Constants = {
 //   PRIMARY KEY seguradoras_pkey: PRIMARY KEY (id)
 // Table: social_links
 //   PRIMARY KEY social_links_pkey: PRIMARY KEY (id)
-// Table: training_progress
-//   PRIMARY KEY training_progress_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY training_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-//   UNIQUE training_progress_user_id_module_id_key: UNIQUE (user_id, module_id)
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
@@ -1997,23 +1900,11 @@ export const Constants = {
 //   PRIMARY KEY vendas_online_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY vendas_online_seguradora_id_fkey: FOREIGN KEY (seguradora_id) REFERENCES seguradoras(id)
 //   CHECK vendas_online_status_check: CHECK ((status = ANY (ARRAY['cotacao'::text, 'proposta'::text, 'emissao'::text, 'cancelada'::text])))
-// Table: vendor_config
-//   PRIMARY KEY vendor_config_pkey: PRIMARY KEY (user_id)
-//   FOREIGN KEY vendor_config_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: access_logs
 //   Policy "access_logs_insert" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
-// Table: app_notifications
-//   Policy "Notifications All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = user_id)
-//     WITH CHECK: (auth.uid() = user_id)
-// Table: audit_log
-//   Policy "Admins can insert audit log" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
-//   Policy "Admins can view audit log" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
 // Table: avaliacoes
 //   Policy "avaliacoes_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
@@ -2044,10 +1935,6 @@ export const Constants = {
 //   Policy "clients_update_policy" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
-// Table: contacts
-//   Policy "Contacts All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: ((EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text))))) OR (proprietario_id = auth.uid()))
-//     WITH CHECK: true
 // Table: conversion_events
 //   Policy "Allow anon insert on conversion_events" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -2059,26 +1946,10 @@ export const Constants = {
 // Table: cotacoes
 //   Policy "cotacoes_insert" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
-// Table: crm_interactions
-//   Policy "Interactions All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
 // Table: depoimentos
 //   Policy "depoimentos_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
-// Table: documents
-//   Policy "Admins can do everything on documents" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
-//   Policy "Clients can delete their own documents" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (client_id = auth.uid())
-//   Policy "Clients can insert their own documents" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (client_id = auth.uid())
-//   Policy "Clients can see their own documents" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (client_id = auth.uid())
-//   Policy "Clients can update their own documents" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (client_id = auth.uid())
-//     WITH CHECK: (client_id = auth.uid())
 // Table: email_campaigns
 //   Policy "admins_all_campaigns" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -2106,27 +1977,11 @@ export const Constants = {
 //   Policy "fidelizacao_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
-// Table: forum_posts
-//   Policy "Forum posts are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "Users can create forum posts" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (auth.uid() = user_id)
-// Table: forum_replies
-//   Policy "Admins can update forum replies" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
-//   Policy "Forum replies are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "Users can create forum replies" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (auth.uid() = user_id)
 // Table: interactions
 //   Policy "admins_all_interactions" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "clients_own_interactions" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (client_id = auth.uid())
-// Table: internal_messages
-//   Policy "Messages All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
 // Table: leads
 //   Policy "Allow anon insert on leads" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
@@ -2137,20 +1992,12 @@ export const Constants = {
 //   Policy "Allow authenticated update on leads" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
-// Table: manual_feedback
-//   Policy "Feedback All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
 // Table: notificacoes_vendas
 //   Policy "notificacoes_vendas_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
 // Table: otp_validacoes
 //   Policy "otp_validacoes_all" (ALL, PERMISSIVE) roles={public}
-//     USING: true
-//     WITH CHECK: true
-// Table: policies
-//   Policy "Policies All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: products
@@ -2161,10 +2008,6 @@ export const Constants = {
 //   Policy "products_select_policy" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
 //   Policy "products_update_policy" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
-// Table: quotations
-//   Policy "Quotations All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: reactivation_requests
@@ -2191,13 +2034,6 @@ export const Constants = {
 //   Policy "social_links_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
-// Table: training_progress
-//   Policy "Users can insert their own progress" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (auth.uid() = user_id)
-//   Policy "Users can see their own progress" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((auth.uid() = user_id) OR (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true)))))
-//   Policy "Users can update their own progress" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = user_id)
 // Table: user_profiles
 //   Policy "Users can read own profile" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = id)
@@ -2205,10 +2041,25 @@ export const Constants = {
 //   Policy "vendas_online_all" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
-// Table: vendor_config
-//   Policy "Vendor Config All" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+
+// --- WARNING: TABLES WITH RLS ENABLED BUT NO POLICIES ---
+// These tables have Row Level Security enabled but NO policies defined.
+// This means ALL queries (SELECT, INSERT, UPDATE, DELETE) will return ZERO rows
+// for non-superuser roles (including the anon and authenticated roles used by the app).
+// You MUST create RLS policies for these tables to allow data access.
+//   - backup_app_notifications
+//   - backup_audit_log
+//   - backup_contacts
+//   - backup_crm_interactions
+//   - backup_documents
+//   - backup_forum_posts
+//   - backup_forum_replies
+//   - backup_internal_messages
+//   - backup_manual_feedback
+//   - backup_policies
+//   - backup_quotations
+//   - backup_training_progress
+//   - backup_vendor_config
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION rls_auto_enable()
@@ -2309,12 +2160,7 @@ export const Constants = {
 // --- TRIGGERS ---
 // Table: clients
 //   on_client_created_welcome: CREATE TRIGGER on_client_created_welcome AFTER INSERT ON public.clients FOR EACH ROW EXECUTE FUNCTION trigger_send_welcome_email()
-// Table: contacts
-//   on_contact_automations: CREATE TRIGGER on_contact_automations AFTER INSERT OR UPDATE OF status ON public.contacts FOR EACH ROW EXECUTE FUNCTION trigger_process_automations()
-//   on_contact_status_change: CREATE TRIGGER on_contact_status_change BEFORE UPDATE ON public.contacts FOR EACH ROW EXECUTE FUNCTION update_stage_updated_at()
 
 // --- INDEXES ---
 // Table: clients
 //   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
-// Table: training_progress
-//   CREATE UNIQUE INDEX training_progress_user_id_module_id_key ON public.training_progress USING btree (user_id, module_id)

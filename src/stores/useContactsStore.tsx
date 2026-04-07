@@ -85,7 +85,7 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setContacts(data.map(mapDbToContact))
+      setContacts((data as any[]).map(mapDbToContact))
     }
   }
 
@@ -106,7 +106,11 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
           fetchContacts()
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime for crm.contacts subscribed successfully!')
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)

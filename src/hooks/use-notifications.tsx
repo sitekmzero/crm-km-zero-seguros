@@ -62,7 +62,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           setNotifications((prev) => [payload.new as Notification, ...prev])
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(
+            'Realtime for crm.app_notifications subscribed successfully!',
+          )
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)

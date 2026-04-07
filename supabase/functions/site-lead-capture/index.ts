@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
 
     // Check duplicates by phone or email
     const { data: existing } = await supabase
-      .schema('crm')
+      .schema('crm' as any)
       .from('contacts')
       .select('id')
       .or(`phone.eq.${telefone},email.eq.${email}`)
@@ -37,13 +37,13 @@ Deno.serve(async (req: Request) => {
     if (existing && existing.length > 0) {
       contactId = existing[0].id
       await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('contacts')
         .update({ modelo_captura, produto_interesse, status: 'lead' })
         .eq('id', contactId)
     } else {
       const { data, error } = await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('contacts')
         .insert({
           first_name: nome.split(' ')[0],

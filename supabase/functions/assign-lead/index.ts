@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const { data: contactsData } = await supabase
-      .schema('crm')
+      .schema('crm' as any)
       .from('contacts')
       .select('proprietario_id, status')
       .in('status', [
@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
     } else {
       // Legacy Specialist Assignment
       const { data: vendorConfigs } = await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('vendor_config')
         .select('user_id, specialties')
       let bestScore = -999999
@@ -82,19 +82,22 @@ Deno.serve(async (req: Request) => {
 
     // Assign
     await supabase
-      .schema('crm')
+      .schema('crm' as any)
       .from('contacts')
       .update({ proprietario_id: selectedVendorId })
       .eq('id', contact_id)
 
     // Notify Vendor via Realtime Notif
-    await supabase.schema('crm').from('app_notifications').insert({
-      user_id: selectedVendorId,
-      title: 'Novo Lead Atribuído',
-      message:
-        'Um novo lead foi atribuído a você pelo sistema de distribuição automática.',
-      type: 'info',
-    })
+    await supabase
+      .schema('crm' as any)
+      .from('app_notifications')
+      .insert({
+        user_id: selectedVendorId,
+        title: 'Novo Lead Atribuído',
+        message:
+          'Um novo lead foi atribuído a você pelo sistema de distribuição automática.',
+        type: 'info',
+      })
 
     return new Response(
       JSON.stringify({

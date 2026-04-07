@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
 
     // Find contact by phone
     const { data: contacts } = await supabase
-      .schema('crm')
+      .schema('crm' as any)
       .from('contacts')
       .select('id, proprietario_id')
       .ilike('phone', `%${phone.substring(phone.length - 8)}%`)
@@ -31,7 +31,7 @@ Deno.serve(async (req: Request) => {
       const contact = contacts[0]
       // Record interaction
       await supabase
-        .schema('crm')
+        .schema('crm' as any)
         .from('crm_interactions')
         .insert({
           contact_id: contact.id,
