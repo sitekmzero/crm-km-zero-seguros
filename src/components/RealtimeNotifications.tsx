@@ -30,6 +30,8 @@ export function RealtimeNotifications() {
         (payload) => {
           if (
             payload.new.proprietario_id === user.id &&
+            payload.old &&
+            payload.old.status &&
             payload.new.status !== payload.old.status
           ) {
             toast('Status Atualizado', {

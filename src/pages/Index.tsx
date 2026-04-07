@@ -52,7 +52,9 @@ import { ptBR } from 'date-fns/locale'
 export default function Index() {
   const [activeTab, setActiveTab] = useState('all')
   const { contacts } = useContactsStore()
-  const { user, signOut, isAdmin } = useAuth()
+  const auth = useAuth() as any
+  const { user, signOut } = auth
+  const isAdmin = auth.isAdmin || user?.user_metadata?.is_admin || false
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications()
 
@@ -82,7 +84,7 @@ export default function Index() {
 
   const filteredContacts = contacts.filter((c) => {
     const searchString =
-      `${c.firstName} ${c.lastName || ''} ${c.email} ${c.cpf || ''}`.toLowerCase()
+      `${c.firstName || ''} ${c.lastName || ''} ${c.email || ''} ${c.cpf || ''}`.toLowerCase()
     if (!searchString.includes(searchTerm.toLowerCase())) return false
     if (filterProduct !== 'all' && c.produto_interesse !== filterProduct)
       return false
@@ -187,10 +189,12 @@ export default function Index() {
                           {n.title}
                         </span>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(n.created_at), {
-                            addSuffix: true,
-                            locale: ptBR,
-                          })}
+                          {n.created_at
+                            ? formatDistanceToNow(new Date(n.created_at), {
+                                addSuffix: true,
+                                locale: ptBR,
+                              })
+                            : 'recentemente'}
                         </span>
                       </div>
                       <span className="text-xs text-muted-foreground line-clamp-2">

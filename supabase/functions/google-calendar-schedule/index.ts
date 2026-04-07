@@ -1,12 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS')
@@ -26,15 +20,15 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Log the interaction
-    await supabase
-      .schema('crm' as any)
-      .from('crm_interactions')
-      .insert({
-        contact_id,
-        tipo: 'Reunião Agendada',
-        descricao: `Reunião agendada para: ${new Date(datetime).toLocaleString('pt-BR')}`,
-      })
+    await supabase.from('crm_interactions').insert({
+      contact_id,
+      tipo: 'Reunião Agendada',
+      descricao: `Reunião agendada para: ${new Date(datetime).toLocaleString('pt-BR')}`,
+    })
 
+    // Mock Google Calendar API logic
+    // In a real application, we would retrieve 'google_calendar_token' from 'vendor_config'
+    // and make an authenticated POST request to https://www.googleapis.com/calendar/v3/calendars/primary/events
     console.log(`[Google Calendar API Mock] Event created for ${datetime}`)
 
     // Send confirmation email to client

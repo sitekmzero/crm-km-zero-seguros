@@ -56,8 +56,10 @@ const mapDbToContact = (row: any): Contact => ({
   email: row.email || '',
   phone: row.phone || '',
   status: row.status as ContactStatus,
-  createdAt: new Date(row.created_at),
-  lastActivityDate: new Date(row.last_activity_date),
+  createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+  lastActivityDate: row.last_activity_date
+    ? new Date(row.last_activity_date)
+    : new Date(),
   companyName: row.company_name || '',
   cpf: row.cpf,
   cep: row.cep,
@@ -69,7 +71,9 @@ const mapDbToContact = (row: any): Contact => ({
   probability: row.probability || 0,
   stageUpdatedAt: row.stage_updated_at
     ? new Date(row.stage_updated_at)
-    : new Date(row.created_at),
+    : row.created_at
+      ? new Date(row.created_at)
+      : new Date(),
 })
 
 export const ContactsProvider = ({ children }: { children: ReactNode }) => {
