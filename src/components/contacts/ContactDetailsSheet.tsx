@@ -57,6 +57,7 @@ export function ContactDetailsSheet({
 
   const fetchInteractions = async () => {
     const { data } = await supabase
+      .schema('crm' as any)
       .from('crm_interactions')
       .select('*')
       .eq('contact_id', contact!.id)
@@ -66,6 +67,7 @@ export function ContactDetailsSheet({
 
   const fetchMessages = async () => {
     const { data } = await supabase
+      .schema('crm' as any)
       .from('internal_messages')
       .select('*, user_profiles:user_id(full_name)')
       .eq('contact_id', contact!.id)
@@ -75,6 +77,7 @@ export function ContactDetailsSheet({
 
   const fetchDocs = async () => {
     const { data } = await supabase
+      .schema('crm' as any)
       .from('documents')
       .select('*')
       .eq('contact_id', contact!.id)
@@ -85,6 +88,7 @@ export function ContactDetailsSheet({
   const addInteraction = async () => {
     if (!newNote.trim() || !contact || !user) return
     const { error } = await supabase
+      .schema('crm' as any)
       .from('crm_interactions')
       .insert({
         contact_id: contact.id,
@@ -102,6 +106,7 @@ export function ContactDetailsSheet({
   const sendChatMessage = async () => {
     if (!chatMsg.trim() || !contact || !user) return
     const { error } = await supabase
+      .schema('crm' as any)
       .from('internal_messages')
       .insert({ contact_id: contact.id, user_id: user.id, message: chatMsg })
     if (!error) {
@@ -124,6 +129,7 @@ export function ContactDetailsSheet({
       '_blank',
     )
     await supabase
+      .schema('crm' as any)
       .from('crm_interactions')
       .insert({
         contact_id: contact.id,
@@ -155,6 +161,7 @@ export function ContactDetailsSheet({
     }
 
     const { error: dbErr } = await supabase
+      .schema('crm' as any)
       .from('documents')
       .insert({
         contact_id: contact.id,

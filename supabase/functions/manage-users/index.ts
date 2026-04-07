@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
         req.headers.get('x-real-ip') ||
         req.headers.get('x-forwarded-for') ||
         'unknown'
-      await supabaseAdmin.from('audit_log').insert({
+      await supabaseAdmin.schema('crm').from('audit_log').insert({
         usuario_id: user.id,
         acao,
         descricao,

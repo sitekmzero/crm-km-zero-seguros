@@ -20,11 +20,14 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Log the interaction
-    await supabase.from('crm_interactions').insert({
-      contact_id,
-      tipo: 'Reunião Agendada',
-      descricao: `Reunião agendada para: ${new Date(datetime).toLocaleString('pt-BR')}`,
-    })
+    await supabase
+      .schema('crm')
+      .from('crm_interactions')
+      .insert({
+        contact_id,
+        tipo: 'Reunião Agendada',
+        descricao: `Reunião agendada para: ${new Date(datetime).toLocaleString('pt-BR')}`,
+      })
 
     // Mock Google Calendar API logic
     // In a real application, we would retrieve 'google_calendar_token' from 'vendor_config'

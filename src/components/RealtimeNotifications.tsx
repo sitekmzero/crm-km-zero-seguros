@@ -14,7 +14,7 @@ export function RealtimeNotifications() {
       .channel('global_notifications')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'contacts' },
+        { event: 'INSERT', schema: 'crm', table: 'contacts' },
         (payload) => {
           if (payload.new.proprietario_id === user.id) {
             toast('Novo Contato Atribuído!', {
@@ -26,7 +26,7 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'contacts' },
+        { event: 'UPDATE', schema: 'crm', table: 'contacts' },
         (payload) => {
           if (
             payload.new.proprietario_id === user.id &&
@@ -41,7 +41,7 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'internal_messages' },
+        { event: 'INSERT', schema: 'crm', table: 'internal_messages' },
         (payload) => {
           if (payload.new.user_id !== user.id) {
             toast('Nova Mensagem no Chat', {
@@ -53,7 +53,7 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'app_notifications' },
+        { event: 'INSERT', schema: 'crm', table: 'app_notifications' },
         (payload) => {
           if (payload.new.user_id === user.id) {
             const isUrgent = payload.new.priority === 'high'

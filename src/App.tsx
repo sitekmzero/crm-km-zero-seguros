@@ -31,6 +31,7 @@ import TreinamentoPratica from './pages/TreinamentoPratica'
 import TreinamentoFluxo from './pages/TreinamentoFluxo'
 import ExemplosTemplates from './pages/ExemplosTemplates'
 import Diagnostico from './pages/Diagnostico'
+import MigrationReport from './pages/MigrationReport'
 import { useEffect } from 'react'
 
 const HashRouterHandler = () => {
@@ -118,6 +119,7 @@ const App = () => (
                   element={<Navigate to="/treinamento" replace />}
                 />
                 <Route path="/diagnostico" element={<Diagnostico />} />
+                <Route path="/migration" element={<MigrationReport />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

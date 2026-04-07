@@ -15,6 +15,7 @@ Deno.serve(async (req: Request) => {
     )
 
     const { data: q, error } = await supabase
+      .schema('crm')
       .from('quotations')
       .update({ status: novo_status })
       .eq('id', quotation_id)
@@ -24,6 +25,7 @@ Deno.serve(async (req: Request) => {
 
     const nextStatus = novo_status === 'aceita' ? 'opportunity' : 'lead'
     await supabase
+      .schema('crm')
       .from('contacts')
       .update({
         status: nextStatus,

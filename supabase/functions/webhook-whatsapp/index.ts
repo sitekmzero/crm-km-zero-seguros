@@ -21,6 +21,7 @@ Deno.serve(async (req: Request) => {
 
     // Find contact by phone
     const { data: contacts } = await supabase
+      .schema('crm')
       .from('contacts')
       .select('id, proprietario_id')
       .ilike('phone', `%${phone.substring(phone.length - 8)}%`)
@@ -29,11 +30,14 @@ Deno.serve(async (req: Request) => {
     if (contacts && contacts.length > 0) {
       const contact = contacts[0]
       // Record interaction
-      await supabase.from('crm_interactions').insert({
-        contact_id: contact.id,
-        tipo: 'WhatsApp (Inbound)',
-        descricao: `Mensagem recebida: ${message}`,
-      })
+      await supabase
+        .schema('crm')
+        .from('crm_interactions')
+        .insert({
+          contact_id: contact.id,
+          tipo: 'WhatsApp (Inbound)',
+          descricao: `Mensagem recebida: ${message}`,
+        })
       // Here you could send an email notification to proprietario_id
     }
 

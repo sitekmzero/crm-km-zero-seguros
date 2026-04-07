@@ -41,6 +41,7 @@ export default function Treinamento() {
   useEffect(() => {
     if (user) {
       supabase
+        .schema('crm' as any)
         .from('training_progress')
         .select('module_id')
         .eq('user_id', user.id)

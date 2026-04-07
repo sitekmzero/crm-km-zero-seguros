@@ -9,6 +9,7 @@ Deno.serve(async () => {
 
     // Fetch active contacts (not customer, not lost)
     const { data: contacts, error } = await supabase
+      .schema('crm')
       .from('contacts')
       .select('id, created_at, status, produto_interesse')
       .not('status', 'eq', 'customer')
@@ -38,6 +39,7 @@ Deno.serve(async () => {
 
       // 3. Interactions (approx 5 pts each, max 30)
       const { count } = await supabase
+        .schema('crm')
         .from('crm_interactions')
         .select('*', { count: 'exact', head: true })
         .eq('contact_id', c.id)
@@ -56,6 +58,7 @@ Deno.serve(async () => {
       if (prob > 99) prob = 99
 
       await supabase
+        .schema('crm')
         .from('contacts')
         .update({ lead_score: score, probability: prob })
         .eq('id', c.id)

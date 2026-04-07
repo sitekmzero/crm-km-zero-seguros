@@ -15,6 +15,7 @@ Deno.serve(async (req: Request) => {
     ).toISOString()
 
     const { data: contacts, error } = await supabase
+      .schema('crm')
       .from('contacts')
       .select('*, user_profiles:proprietario_id(email, full_name)')
       .in('status', ['lead', 'marketing_qualified_lead'])

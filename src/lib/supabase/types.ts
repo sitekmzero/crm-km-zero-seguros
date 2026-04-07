@@ -432,6 +432,39 @@ export type Database = {
           },
         ]
       }
+      depoimentos: {
+        Row: {
+          created_at: string
+          depoimento: string
+          foto_url: string | null
+          id: string
+          nome: string
+          profissao: string | null
+          rating: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          depoimento: string
+          foto_url?: string | null
+          id?: string
+          nome: string
+          profissao?: string | null
+          rating?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          depoimento?: string
+          foto_url?: string | null
+          id?: string
+          nome?: string
+          profissao?: string | null
+          rating?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           client_id: string | null
@@ -583,6 +616,95 @@ export type Database = {
           variables_used?: string[] | null
         }
         Relationships: []
+      }
+      error_logs: {
+        Row: {
+          funcao: string
+          id: string
+          mensagem: string
+          stack_trace: string | null
+          timestamp: string
+          tipo_erro: string
+        }
+        Insert: {
+          funcao: string
+          id?: string
+          mensagem: string
+          stack_trace?: string | null
+          timestamp?: string
+          tipo_erro: string
+        }
+        Update: {
+          funcao?: string
+          id?: string
+          mensagem?: string
+          stack_trace?: string | null
+          timestamp?: string
+          tipo_erro?: string
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          categoria: string
+          created_at: string
+          id: string
+          pergunta: string
+          resposta: string
+          status: string | null
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          id?: string
+          pergunta: string
+          resposta: string
+          status?: string | null
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          id?: string
+          pergunta?: string
+          resposta?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      fidelizacao: {
+        Row: {
+          cliente_id: string | null
+          data_criacao: string
+          id: string
+          nivel: string | null
+          pontos_totais: number | null
+          pontos_usados: number | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          data_criacao?: string
+          id?: string
+          nivel?: string | null
+          pontos_totais?: number | null
+          pontos_usados?: number | null
+        }
+        Update: {
+          cliente_id?: string | null
+          data_criacao?: string
+          id?: string
+          nivel?: string | null
+          pontos_totais?: number | null
+          pontos_usados?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'fidelizacao_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+        ]
       }
       forum_posts: {
         Row: {
@@ -1111,6 +1233,33 @@ export type Database = {
         }
         Relationships: []
       }
+      social_links: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          icone: string | null
+          id: string
+          plataforma: string
+          url: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          icone?: string | null
+          id?: string
+          plataforma: string
+          url: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          icone?: string | null
+          id?: string
+          plataforma?: string
+          url?: string
+        }
+        Relationships: []
+      }
       training_progress: {
         Row: {
           completed_at: string | null
@@ -1498,6 +1647,15 @@ export const Constants = {
 //   descricao: text (nullable)
 //   data: timestamp with time zone (not null, default: now())
 //   user_id: uuid (nullable)
+// Table: depoimentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   profissao: text (nullable)
+//   foto_url: text (nullable)
+//   depoimento: text (not null)
+//   rating: integer (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: documents
 //   id: uuid (not null, default: gen_random_uuid())
 //   client_id: uuid (nullable)
@@ -1533,6 +1691,27 @@ export const Constants = {
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   created_by: uuid (nullable)
 //   variables_used: _text (nullable)
+// Table: error_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   funcao: text (not null)
+//   tipo_erro: text (not null)
+//   mensagem: text (not null)
+//   stack_trace: text (nullable)
+//   timestamp: timestamp with time zone (not null, default: now())
+// Table: faqs
+//   id: uuid (not null, default: gen_random_uuid())
+//   pergunta: text (not null)
+//   resposta: text (not null)
+//   categoria: text (not null)
+//   status: text (nullable, default: 'ativo'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: fidelizacao
+//   id: uuid (not null, default: gen_random_uuid())
+//   cliente_id: uuid (nullable)
+//   pontos_totais: integer (nullable, default: 0)
+//   pontos_usados: integer (nullable, default: 0)
+//   nivel: text (nullable, default: 'Bronze'::text)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: forum_posts
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1660,6 +1839,13 @@ export const Constants = {
 //   sac_link: text (nullable)
 //   produtos_oferecidos: _text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: social_links
+//   id: uuid (not null, default: gen_random_uuid())
+//   plataforma: text (not null)
+//   url: text (not null)
+//   icone: text (nullable)
+//   ativo: boolean (nullable, default: true)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: training_progress
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1729,6 +1915,9 @@ export const Constants = {
 //   FOREIGN KEY crm_interactions_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   PRIMARY KEY crm_interactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY crm_interactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+// Table: depoimentos
+//   PRIMARY KEY depoimentos_pkey: PRIMARY KEY (id)
+//   CHECK depoimentos_rating_check: CHECK (((rating >= 1) AND (rating <= 5)))
 // Table: documents
 //   FOREIGN KEY documents_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   CHECK documents_document_type_check: CHECK ((document_type = ANY (ARRAY['apólice'::text, 'documento_pessoal'::text, 'contrato'::text, 'comprovante'::text])))
@@ -1744,6 +1933,13 @@ export const Constants = {
 // Table: email_templates
 //   FOREIGN KEY email_templates_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id)
 //   PRIMARY KEY email_templates_pkey: PRIMARY KEY (id)
+// Table: error_logs
+//   PRIMARY KEY error_logs_pkey: PRIMARY KEY (id)
+// Table: faqs
+//   PRIMARY KEY faqs_pkey: PRIMARY KEY (id)
+// Table: fidelizacao
+//   FOREIGN KEY fidelizacao_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clients(id)
+//   PRIMARY KEY fidelizacao_pkey: PRIMARY KEY (id)
 // Table: forum_posts
 //   PRIMARY KEY forum_posts_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY forum_posts_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -1788,6 +1984,8 @@ export const Constants = {
 //   FOREIGN KEY referrals_referrer_id_fkey: FOREIGN KEY (referrer_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: seguradoras
 //   PRIMARY KEY seguradoras_pkey: PRIMARY KEY (id)
+// Table: social_links
+//   PRIMARY KEY social_links_pkey: PRIMARY KEY (id)
 // Table: training_progress
 //   PRIMARY KEY training_progress_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY training_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -1865,6 +2063,10 @@ export const Constants = {
 //   Policy "Interactions All" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: depoimentos
+//   Policy "depoimentos_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
 // Table: documents
 //   Policy "Admins can do everything on documents" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1892,6 +2094,18 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND ((user_profiles.is_admin = true) OR (user_profiles.role = 'admin'::text)))))
 //   Policy "Anyone can read templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: error_logs
+//   Policy "error_logs_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
+// Table: faqs
+//   Policy "faqs_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
+// Table: fidelizacao
+//   Policy "fidelizacao_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
 // Table: forum_posts
 //   Policy "Forum posts are visible to everyone" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -1973,6 +2187,10 @@ export const Constants = {
 // Table: seguradoras
 //   Policy "seguradoras_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
+// Table: social_links
+//   Policy "social_links_all" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
 // Table: training_progress
 //   Policy "Users can insert their own progress" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (auth.uid() = user_id)

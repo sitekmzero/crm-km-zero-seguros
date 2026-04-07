@@ -52,12 +52,14 @@ export default function Quotations() {
 
   const fetchData = async () => {
     const { data: qData } = await supabase
+      .schema('crm' as any)
       .from('quotations')
       .select('*, contacts(first_name, last_name)')
       .order('data_criacao', { ascending: false })
     if (qData) setQuotations(qData)
 
     const { data: cData } = await supabase
+      .schema('crm' as any)
       .from('contacts')
       .select('id, first_name, last_name')
       .order('first_name')
@@ -73,17 +75,20 @@ export default function Quotations() {
         variant: 'destructive',
       })
 
-    const { error } = await supabase.from('quotations').insert({
-      contact_id: formData.contact_id,
-      tipo_produto: formData.tipo_produto,
-      dados_cotacao: {
-        marca: formData.marca,
-        modelo: formData.modelo,
-        ano: formData.ano,
-        valor: formData.valor,
-      },
-      status: 'pendente',
-    })
+    const { error } = await supabase
+      .schema('crm' as any)
+      .from('quotations')
+      .insert({
+        contact_id: formData.contact_id,
+        tipo_produto: formData.tipo_produto,
+        dados_cotacao: {
+          marca: formData.marca,
+          modelo: formData.modelo,
+          ano: formData.ano,
+          valor: formData.valor,
+        },
+        status: 'pendente',
+      })
 
     if (error) {
       toast({

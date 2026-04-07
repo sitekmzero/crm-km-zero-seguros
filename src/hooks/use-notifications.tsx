@@ -37,6 +37,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchNotifs = async () => {
       const { data } = await supabase
+        .schema('crm' as any)
         .from('app_notifications')
         .select('*')
         .eq('user_id', user.id)
@@ -53,7 +54,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         'postgres_changes',
         {
           event: 'INSERT',
-          schema: 'public',
+          schema: 'crm',
           table: 'app_notifications',
           filter: `user_id=eq.${user.id}`,
         },
@@ -69,7 +70,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [user])
 
   const markAsRead = async (id: string) => {
-    await supabase.from('app_notifications').update({ read: true }).eq('id', id)
+    await supabase
+      .schema('crm' as any)
+      .from('app_notifications')
+      .update({ read: true })
+      .eq('id', id)
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     )
@@ -78,6 +83,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const markAllAsRead = async () => {
     if (!user) return
     await supabase
+      .schema('crm' as any)
       .from('app_notifications')
       .update({ read: true })
       .eq('user_id', user.id)

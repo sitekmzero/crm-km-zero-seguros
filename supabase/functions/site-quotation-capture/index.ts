@@ -16,6 +16,7 @@ Deno.serve(async (req: Request) => {
     )
 
     const { data: quotation, error } = await supabase
+      .schema('crm')
       .from('quotations')
       .insert({
         contact_id,
@@ -30,6 +31,7 @@ Deno.serve(async (req: Request) => {
 
     // Update pipeline status
     await supabase
+      .schema('crm')
       .from('contacts')
       .update({
         status: 'marketing_qualified_lead',

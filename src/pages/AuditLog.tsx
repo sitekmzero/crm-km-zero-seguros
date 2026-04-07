@@ -34,6 +34,7 @@ export default function AuditLog() {
 
   const fetchLogs = async () => {
     const { data } = await supabase
+      .schema('crm' as any)
       .from('audit_log')
       .select('*, user_profiles:usuario_id(full_name, email)')
       .order('data_hora', { ascending: false })
