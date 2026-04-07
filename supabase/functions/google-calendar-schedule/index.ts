@@ -30,8 +30,8 @@ Deno.serve(async (req: Request) => {
       })
 
     // Mock Google Calendar API logic
-    // In a real application, we would retrieve the google calendar token using the vendor configuration
-    // and make an authenticated POST request to https://www.googleapis.com/calendar/v3/calendars/primary/events
+    // In a real application, we would retrieve the google calendar token from the database
+    // and make an authenticated POST request to the API
     console.log(`[Google Calendar API Mock] Event created for ${datetime}`)
 
     // Send confirmation email to client

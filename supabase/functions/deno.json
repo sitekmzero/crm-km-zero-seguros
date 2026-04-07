@@ -12,7 +12,7 @@
     "processar-lead": 6,
     "submitForm": 2,
     "send-welcome-email": 1,
-    "process-renewals": 3,
+    "process-renewals": 4,
     "crisp-webhook": 1,
     "enviar-otp": 1,
     "notificar-venda": 1,
@@ -23,10 +23,10 @@
     "site-quotation-response": 2,
     "assign-lead": 5,
     "calculate-lead-score": 2,
-    "process-automations": 2,
+    "process-automations": 3,
     "gemini-chatbot": 1,
     "google-calendar-schedule": 1,
-    "manage-users": 2,
+    "manage-users": 3,
     "cotacao-real": 2,
     "migrate-crm-schema": 1
   }
