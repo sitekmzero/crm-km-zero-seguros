@@ -34,7 +34,7 @@ export default function Login() {
           .from('user_profiles')
           .select('role, is_admin')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
         if (profile?.role === 'admin' || profile?.is_admin) {
           navigate('/dashboard')
         } else {
