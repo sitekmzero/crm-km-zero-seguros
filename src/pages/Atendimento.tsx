@@ -10,6 +10,7 @@ import { ConfigView } from '@/components/atendimento/ConfigView'
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
   is_draft?: boolean
+  feedback?: 'positive' | 'negative' | null
 }
 
 export default function Atendimento() {

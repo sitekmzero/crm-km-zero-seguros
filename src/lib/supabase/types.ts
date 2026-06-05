@@ -74,6 +74,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_draft: boolean | null
           lead_id: string
           sender: Database['public']['Enums']['message_sender']
         }
@@ -81,6 +82,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_draft?: boolean | null
           lead_id: string
           sender: Database['public']['Enums']['message_sender']
         }
@@ -88,6 +90,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_draft?: boolean | null
           lead_id?: string
           sender?: Database['public']['Enums']['message_sender']
         }
@@ -287,6 +290,7 @@ export const Constants = {
 //   sender: message_sender (not null)
 //   content: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+//   is_draft: boolean (nullable, default: false)
 
 // --- CONSTRAINTS ---
 // Table: configs

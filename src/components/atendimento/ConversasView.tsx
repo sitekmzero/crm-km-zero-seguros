@@ -14,6 +14,9 @@ import {
   Search,
   MessageSquare,
   Check,
+  ThumbsUp,
+  ThumbsDown,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
@@ -21,6 +24,7 @@ import { StatusBadge } from './StatusBadge'
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
   is_draft?: boolean
+  feedback?: 'positive' | 'negative' | null
 }
 
 interface ConversasViewProps {
@@ -83,6 +87,38 @@ export function ConversasView({
       })
     } else {
       toast({ title: 'Mensagem aprovada e enviada!' })
+    }
+  }
+
+  const handleDeleteDraft = async (msgId: string) => {
+    const { error } = await supabase.from('messages').delete().eq('id', msgId)
+    if (error) {
+      toast({
+        title: 'Erro ao excluir rascunho',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Rascunho excluído com sucesso!' })
+    }
+  }
+
+  const handleFeedback = async (
+    msgId: string,
+    feedback: 'positive' | 'negative',
+  ) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({ feedback } as any)
+      .eq('id', msgId)
+    if (error) {
+      toast({
+        title: 'Erro ao salvar feedback',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Feedback registrado!' })
     }
   }
 
@@ -295,7 +331,16 @@ export function ConversasView({
                         {msg.content}
                       </div>
                       {msg.is_draft && isIA && (
-                        <div className="mt-3 flex justify-end">
+                        <div className="mt-3 flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                            onClick={() => handleDeleteDraft(msg.id)}
+                            title="Excluir Rascunho"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="secondary"
@@ -307,18 +352,55 @@ export function ConversasView({
                           </Button>
                         </div>
                       )}
-                      <div
-                        className={cn(
-                          'text-[10px] mt-1 text-right opacity-60',
-                          isHumano
-                            ? 'text-primary-foreground/60'
-                            : 'text-muted-foreground',
-                        )}
-                      >
-                        {new Date(msg.created_at).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+
+                      <div className="flex items-center justify-between mt-1 pt-1">
+                        <div className="flex items-center gap-1">
+                          {!msg.is_draft && isIA && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleFeedback(msg.id, 'positive')
+                                }
+                                className={cn(
+                                  'p-1 rounded transition-colors',
+                                  msg.feedback === 'positive'
+                                    ? 'bg-green-500/20 text-green-700'
+                                    : 'hover:bg-secondary text-muted-foreground/50 hover:text-foreground',
+                                )}
+                                title="Boa resposta"
+                              >
+                                <ThumbsUp className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleFeedback(msg.id, 'negative')
+                                }
+                                className={cn(
+                                  'p-1 rounded transition-colors',
+                                  msg.feedback === 'negative'
+                                    ? 'bg-red-500/20 text-red-700'
+                                    : 'hover:bg-secondary text-muted-foreground/50 hover:text-foreground',
+                                )}
+                                title="Resposta inadequada"
+                              >
+                                <ThumbsDown className="h-3 w-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        <div
+                          className={cn(
+                            'text-[10px] text-right opacity-60',
+                            isHumano
+                              ? 'text-primary-foreground/60'
+                              : 'text-muted-foreground',
+                          )}
+                        >
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>

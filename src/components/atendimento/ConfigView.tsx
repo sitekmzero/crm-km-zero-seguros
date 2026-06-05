@@ -12,6 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  BotMessageSquare,
+  GraduationCap,
+  Briefcase,
+  UserCheck,
+} from 'lucide-react'
 
 export function ConfigView() {
   const [prompt, setPrompt] = useState('')
@@ -54,6 +60,24 @@ export function ConfigView() {
     setLoading(false)
   }
 
+  const applyPreset = (preset: 'formal' | 'consultive' | 'sales') => {
+    const presets = {
+      formal:
+        '\n\nDiretriz de Voz: Use um tom formal, educado e altamente profissional. Evite gírias e foque na clareza.',
+      consultive:
+        '\n\nDiretriz de Voz: Use um tom consultivo, empático e acolhedor. Faça perguntas para entender a real necessidade do cliente antes de oferecer soluções.',
+      sales:
+        '\n\nDiretriz de Voz: Use um tom persuasivo, direto e focado em conversão. Utilize chamadas para ação claras e crie senso de urgência de forma elegante.',
+    }
+
+    let newPrompt = prompt.replace(/\n\nDiretriz de Voz:.*/g, '').trim()
+    setPrompt(newPrompt + presets[preset])
+    toast({
+      title: 'Tom de voz aplicado',
+      description: 'Clique em Salvar para efetivar as mudanças.',
+    })
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-muted/20 w-full h-full">
       <div className="max-w-3xl mx-auto space-y-6 pb-20">
@@ -87,13 +111,47 @@ export function ConfigView() {
 
         <Card>
           <CardHeader>
-            <CardTitle>System Prompt</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <BotMessageSquare className="h-5 w-5" />
+              System Prompt
+            </CardTitle>
             <CardDescription>
               Instruções base que definem o comportamento e as regras do SDR
               virtual na qualificação de leads.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className="text-sm font-medium text-foreground w-full mb-1">
+                Predefinições de Tom de Voz:
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset('formal')}
+                className="gap-2 bg-background"
+              >
+                <Briefcase className="h-4 w-4 text-muted-foreground" /> Formal
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset('consultive')}
+                className="gap-2 bg-background"
+              >
+                <UserCheck className="h-4 w-4 text-muted-foreground" />{' '}
+                Consultivo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset('sales')}
+                className="gap-2 bg-background"
+              >
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />{' '}
+                Vendas
+              </Button>
+            </div>
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}

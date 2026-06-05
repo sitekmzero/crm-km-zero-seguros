@@ -18,6 +18,7 @@ import { Database } from '@/lib/supabase/types'
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
   is_draft?: boolean
+  feedback?: 'positive' | 'negative' | null
 }
 
 export function MetricasView({
@@ -97,14 +98,27 @@ export function MetricasView({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total de Leads
+                Leads Ativos (24h)
               </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{leads.length}</div>
+              <div className="text-2xl font-bold">
+                {
+                  Object.keys(messages).filter((leadId) => {
+                    const leadMessages = messages[leadId]
+                    if (!leadMessages || leadMessages.length === 0) return false
+                    const lastMsg = leadMessages[leadMessages.length - 1]
+                    const lastMsgDate = new Date(lastMsg.created_at)
+                    const hours24Ago = new Date(
+                      Date.now() - 24 * 60 * 60 * 1000,
+                    )
+                    return lastMsgDate > hours24Ago
+                  }).length
+                }
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                cadastrados no CRM
+                com interação recente
               </p>
             </CardContent>
           </Card>
