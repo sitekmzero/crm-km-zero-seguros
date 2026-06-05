@@ -13,7 +13,7 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { lead_id, content, sender = 'humano' } = await req.json()
+    const { lead_id, content, sender = 'humano', message_id } = await req.json()
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -38,14 +38,27 @@ Deno.serve(async (req: Request) => {
         .eq('id', lead_id)
     }
 
-    await supabase.from('messages').insert({
-      lead_id,
-      sender,
-      content,
-    })
+    if (message_id) {
+      await supabase
+        .from('messages')
+        .update({
+          sender,
+          content,
+          is_draft: false,
+        })
+        .eq('id', message_id)
+    } else {
+      await supabase.from('messages').insert({
+        lead_id,
+        sender,
+        content,
+        is_draft: false,
+      })
+    }
 
     const waToken = Deno.env.get('META_ACCESS_TOKEN')
-    const waPhoneId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+    const waPhoneId =
+      Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
     if (waToken && waPhoneId && lead?.phone) {
       await fetch(`https://graph.facebook.com/v17.0/${waPhoneId}/messages`, {
         method: 'POST',

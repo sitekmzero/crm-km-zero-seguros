@@ -127,15 +127,20 @@ Deno.serve(async (req: Request) => {
 
       const { data: configData, error: configError } = await supabase
         .from('configs')
-        .select('value')
-        .eq('key', 'sdr_system_prompt')
-        .maybeSingle()
+        .select('key, value')
+        .in('key', ['sdr_system_prompt', 'learning_mode_active'])
       if (configError)
         throw new Error(`Config fetch error: ${configError.message}`)
 
+      const configMap = (configData || []).reduce((acc: any, curr: any) => {
+        acc[curr.key] = curr.value
+        return acc
+      }, {})
+
       const defaultPrompt =
         'Você é um SDR virtual da KM Zero Seguros, Consórcios e Financiamentos.'
-      const prompt = configData?.value || defaultPrompt
+      const prompt = configMap['sdr_system_prompt'] || defaultPrompt
+      const isLearningMode = configMap['learning_mode_active'] === 'true'
       const history = (historyData || []).reverse()
 
       const geminiMessages = history.map((m: any) => ({
@@ -193,22 +198,32 @@ Deno.serve(async (req: Request) => {
             throw new Error(`Lead update error: ${updateError.message}`)
         }
 
-        const waToken = Deno.env.get('META_ACCESS_TOKEN')
-        const waPhoneId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+        if (isLearningMode) {
+          const { error: draftError } = await supabase.from('messages').insert({
+            lead_id: lead.id,
+            sender: 'ia',
+            content: cleanText,
+            is_draft: true,
+          })
+          if (draftError) console.error('[DRAFT_ERROR]', draftError)
+        } else {
+          const waToken = Deno.env.get('META_ACCESS_TOKEN')
+          const waPhoneId =
+            Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
+          if (!waToken || !waPhoneId)
+            throw new Error('WhatsApp API credentials missing')
 
-        if (!waToken || !waPhoneId)
-          throw new Error('WhatsApp API credentials missing')
+          // Trigger the send-whatsapp Edge Function to deliver the AI response
+          const { error: invokeError } = await supabase.functions.invoke(
+            'send-whatsapp',
+            {
+              body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
+            },
+          )
 
-        // Trigger the send-whatsapp Edge Function to deliver the AI response
-        const { error: invokeError } = await supabase.functions.invoke(
-          'send-whatsapp',
-          {
-            body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
-          },
-        )
-
-        if (invokeError) {
-          console.error('[INVOKE_ERROR]', invokeError)
+          if (invokeError) {
+            console.error('[INVOKE_ERROR]', invokeError)
+          }
         }
       }
 
