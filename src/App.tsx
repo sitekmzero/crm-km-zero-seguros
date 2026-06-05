@@ -18,6 +18,7 @@ import Manual from './pages/Manual'
 import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import Atendimento from './pages/Atendimento'
 import { ContactsProvider } from '@/stores/useContactsStore'
 import { AuthProvider } from '@/hooks/use-auth'
 import { NotificationProvider } from '@/hooks/use-notifications'
@@ -70,6 +71,7 @@ const App = () => (
               >
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/atendimento" element={<Atendimento />} />
                 <Route path="/quotations" element={<Quotations />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/reports" element={<Reports />} />

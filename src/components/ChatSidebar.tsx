@@ -9,6 +9,7 @@ import {
   Ticket,
   GraduationCap,
   Activity,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -48,6 +49,12 @@ export function ChatSidebar({ className }: { className?: string }) {
             icon={LayoutDashboard}
             label="Dashboard"
             active={location.pathname === '/dashboard'}
+          />
+          <NavItem
+            to="/atendimento"
+            icon={MessageSquare}
+            label="Atendimento"
+            active={location.pathname === '/atendimento'}
           />
           <NavItem
             to="/quotations"

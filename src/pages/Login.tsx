@@ -20,9 +20,14 @@ export default function Login() {
     setLoading(true)
     const { error } = await signIn(email, password)
     if (error) {
+      const isInvalidCredentials =
+        error.message.toLowerCase().includes('invalid login credentials') ||
+        error.message.toLowerCase().includes('invalid_credentials')
       toast({
         title: 'Erro ao fazer login',
-        description: error.message,
+        description: isInvalidCredentials
+          ? 'E-mail ou senha incorretos. Tente novamente.'
+          : error.message,
         variant: 'destructive',
       })
     } else {

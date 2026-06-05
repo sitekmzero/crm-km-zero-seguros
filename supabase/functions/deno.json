@@ -1,5 +1,6 @@
 {
   "_versions": {
-    "webhook-whatsapp": 1
+    "webhook-whatsapp": 8,
+    "send-whatsapp": 3
   }
 }
