@@ -137,7 +137,10 @@ Deno.serve(async (req: Request) => {
             })
             .select('*')
             .single()
-          if (error) throw new Error(`Lead insert error: ${error.message}`)
+          if (error) {
+            console.error('Failed database operation (Lead Insert):', error)
+            throw new Error(`Lead insert error: ${error.message}`)
+          }
           lead = newLead
         } catch (e: any) {
           console.error('Error creating lead:', e)
@@ -205,8 +208,13 @@ Deno.serve(async (req: Request) => {
           sender: 'lead',
           content: messageBody,
         })
-      if (insertMsgError)
+      if (insertMsgError) {
+        console.error(
+          'Failed database operation (Message Insert):',
+          insertMsgError,
+        )
         throw new Error(`Message insert error: ${insertMsgError.message}`)
+      }
 
       // Atualiza o updated_at do lead para refletir a nova mensagem na listagem
       await supabase

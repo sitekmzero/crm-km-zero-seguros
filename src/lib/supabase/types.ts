@@ -629,6 +629,9 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "authenticated_select_leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+//   Policy "authenticated_update_leads" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: messages
 //   Policy "anon_insert_messages" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
