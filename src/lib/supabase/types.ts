@@ -138,6 +138,38 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          contact_id: string | null
+          file_name: string
+          file_path: string
+          id: string
+          uploaded_at: string
+        }
+        Insert: {
+          contact_id?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          uploaded_at?: string
+        }
+        Update: {
+          contact_id?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'documents_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       leads: {
         Row: {
           ai_active: boolean
@@ -463,6 +495,12 @@ export const Constants = {
 //   last_activity_date: timestamp with time zone (nullable, default: now())
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: documents
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   file_name: text (not null)
+//   file_path: text (not null)
+//   uploaded_at: timestamp with time zone (not null, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -502,6 +540,9 @@ export const Constants = {
 // Table: contacts
 //   PRIMARY KEY contacts_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY contacts_proprietario_id_fkey: FOREIGN KEY (proprietario_id) REFERENCES auth.users(id) ON DELETE SET NULL
+// Table: documents
+//   FOREIGN KEY documents_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY documents_pkey: PRIMARY KEY (id)
 // Table: leads
 //   UNIQUE leads_phone_key: UNIQUE (phone)
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
@@ -536,6 +577,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: contacts
 //   Policy "authenticated_all_contacts" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: documents
+//   Policy "authenticated_all_documents" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: leads
