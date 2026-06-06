@@ -62,7 +62,8 @@ Deno.serve(async (req: Request) => {
       const message = messages[0]
       const phone = message.from
       const messageId = message.id
-      const contactName = value?.contacts?.[0]?.profile?.name || phone
+      const contactName =
+        value?.contacts?.[0]?.profile?.name || 'Cliente WhatsApp'
 
       if (!phone) return new Response('Ignored', { status: 200 })
 
@@ -124,19 +125,33 @@ Deno.serve(async (req: Request) => {
       }
 
       if (!lead) {
-        const { data: newLead, error } = await supabase
-          .schema('public')
-          .from('leads')
-          .insert({
-            phone: normalizedPhone,
-            name: contactName,
-            status: 'novo',
-            ai_active: true,
-          })
-          .select('*')
-          .single()
-        if (error) throw new Error(`Lead insert error: ${error.message}`)
-        lead = newLead
+        try {
+          const { data: newLead, error } = await supabase
+            .schema('public')
+            .from('leads')
+            .insert({
+              phone: normalizedPhone,
+              name: contactName,
+              status: 'novo',
+              ai_active: true,
+            })
+            .select('*')
+            .single()
+          if (error) throw new Error(`Lead insert error: ${error.message}`)
+          lead = newLead
+        } catch (e: any) {
+          console.error('Error creating lead:', e)
+          return new Response(
+            JSON.stringify({
+              success: false,
+              message: 'Failed to create lead',
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          )
+        }
       }
 
       console.log(

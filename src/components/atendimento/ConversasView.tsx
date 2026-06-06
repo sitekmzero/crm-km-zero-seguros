@@ -357,20 +357,73 @@ export function ConversasView({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h3 className="font-medium text-sm text-foreground">
-                  {selectedLead.name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-sm text-foreground">
+                    {selectedLead.name}
+                  </h3>
+                  {selectedLead.ai_active ? (
+                    <Bot className="h-4 w-4 text-primary" title="IA Ativa" />
+                  ) : (
+                    <User
+                      className="h-4 w-4 text-orange-500"
+                      title="Atendimento Humano"
+                    />
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Phone className="h-3 w-3" />
                   {selectedLead.phone}
                 </div>
               </div>
-              <div className="hidden sm:block">
+              <div className="hidden sm:block mr-2">
                 <StatusBadge
                   status={selectedLead.status}
                   aiActive={selectedLead.ai_active}
                 />
               </div>
+              <Button
+                variant={selectedLead.ai_active ? 'outline' : 'default'}
+                size="sm"
+                className={cn(
+                  'whitespace-nowrap transition-all',
+                  selectedLead.ai_active
+                    ? 'border-primary text-primary hover:bg-primary/10'
+                    : '',
+                )}
+                onClick={async () => {
+                  const newAiActive = !selectedLead.ai_active
+                  const { error } = await supabase
+                    .from('leads')
+                    .update({ ai_active: newAiActive })
+                    .eq('id', selectedLead.id)
+                  if (error) {
+                    toast({
+                      title: 'Erro',
+                      description: error.message,
+                      variant: 'destructive',
+                    })
+                  } else {
+                    toast({
+                      title: newAiActive
+                        ? 'IA Ativada'
+                        : 'Atendimento assumido',
+                      description: newAiActive
+                        ? 'A IA voltou a responder.'
+                        : 'Você assumiu esta conversa.',
+                    })
+                  }
+                }}
+              >
+                {selectedLead.ai_active ? (
+                  <>
+                    <User className="w-4 h-4 mr-2" /> Assumir Atendimento
+                  </>
+                ) : (
+                  <>
+                    <Bot className="w-4 h-4 mr-2" /> Ativar IA
+                  </>
+                )}
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
