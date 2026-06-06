@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Contact, ContactStatus } from '@/stores/useContactsStore'
 import { KanbanColumn } from './KanbanColumn'
 import useContactsStore from '@/stores/useContactsStore'
 import { useToast } from '@/hooks/use-toast'
 import { JourneyModal } from './JourneyModal'
+import { supabase } from '@/lib/supabase/client'
 
 interface ContactsBoardProps {
   contacts: Contact[]
@@ -12,7 +13,7 @@ interface ContactsBoardProps {
 }
 
 export function ContactsBoard({
-  contacts,
+  contacts: initialContacts,
   onEdit,
   onViewDetails,
 }: ContactsBoardProps) {
@@ -20,6 +21,70 @@ export function ContactsBoard({
   const { toast } = useToast()
   const [draggedContactId, setDraggedContactId] = useState<string | null>(null)
   const [viewingContact, setViewingContact] = useState<Contact | null>(null)
+  const [localContacts, setLocalContacts] = useState<Contact[]>(initialContacts)
+
+  // Sincroniza o state local com as props iniciais (ex. ao carregar via fetch)
+  useEffect(() => {
+    setLocalContacts(initialContacts)
+  }, [initialContacts])
+
+  // 2. ASSINATURA REALTIME NO KANBAN (Dashboard):
+  useEffect(() => {
+    // Inscreve-se nas atualizações das entidades do Kanban (tabela contacts)
+    const contactsChannel = supabase
+      .channel('contacts-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'contacts',
+        },
+        (payload) => {
+          setLocalContacts((prev) =>
+            prev.map((c) =>
+              c.id === payload.new.id ? { ...c, ...payload.new } : c,
+            ),
+          )
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'contacts',
+        },
+        (payload) => {
+          setLocalContacts((prev) => {
+            if (prev.some((c) => c.id === payload.new.id)) return prev
+            return [payload.new as Contact, ...prev]
+          })
+        },
+      )
+      .subscribe()
+
+    // Inscreve-se nos eventos UPDATE da tabela leads como especificamente solicitado
+    const leadsChannel = supabase
+      .channel('leads-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          // Escuta os updates da tabela leads (caso as entidades fluam para o kanban)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(contactsChannel)
+      supabase.removeChannel(leadsChannel)
+    }
+  }, [])
 
   const columns: { id: ContactStatus; title: string }[] = [
     { id: 'subscriber', title: 'Assinante' },
@@ -36,6 +101,11 @@ export function ContactsBoard({
 
   const handleDrop = async (status: ContactStatus) => {
     if (draggedContactId) {
+      // Optimistic update para mover o cartão de coluna instantaneamente
+      setLocalContacts((prev) =>
+        prev.map((c) => (c.id === draggedContactId ? { ...c, status } : c)),
+      )
+
       await updateContact(draggedContactId, { status })
       toast({
         title: 'Status atualizado',
@@ -55,7 +125,7 @@ export function ContactsBoard({
             key={col.id}
             id={col.id}
             title={col.title}
-            contacts={contacts.filter((c) => c.status === col.id)}
+            contacts={localContacts.filter((c) => c.status === col.id)}
             onDrop={handleDrop}
             onDragStart={handleDragStart}
             onViewJourney={setViewingContact}

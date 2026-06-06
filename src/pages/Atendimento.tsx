@@ -23,35 +23,21 @@ export default function Atendimento() {
   useEffect(() => {
     fetchInitialData()
 
-    const channel = supabase
-      .channel('atendimento_realtime')
+    // 1. ASSINATURA REALTIME NO CHAT (Componente de Conversa):
+    const messagesChannel = supabase
+      .channel('schema-db-changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'leads' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setLeads((prev) => {
-              if (prev.some((l) => l.id === payload.new.id)) return prev
-              return [payload.new as Lead, ...prev]
-            })
-          } else if (payload.eventType === 'UPDATE') {
-            setLeads((prev) =>
-              prev.map((l) =>
-                l.id === payload.new.id ? (payload.new as Lead) : l,
-              ),
-            )
-          } else if (payload.eventType === 'DELETE') {
-            setLeads((prev) => prev.filter((l) => l.id !== payload.old.id))
-          }
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
         },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
           const newMsg = payload.new as Message
           setMessages((prev) => {
             const list = prev[newMsg.lead_id] || []
+            // Evita duplicação caso a mensagem já exista
             if (list.some((m) => m.id === newMsg.id)) return prev
             return {
               ...prev,
@@ -62,7 +48,11 @@ export default function Atendimento() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
         (payload) => {
           const updMsg = payload.new as Message
           setMessages((prev) => {
@@ -78,7 +68,11 @@ export default function Atendimento() {
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'messages' },
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+        },
         (payload) => {
           setMessages((prev) => {
             const newState = { ...prev }
@@ -91,19 +85,63 @@ export default function Atendimento() {
           })
         },
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Realtime for Atendimento subscribed successfully!')
-        }
-      })
+      .subscribe()
 
+    const leadsChannel = supabase
+      .channel('leads-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          setLeads((prev) =>
+            prev.map((l) =>
+              l.id === payload.new.id ? { ...l, ...(payload.new as Lead) } : l,
+            ),
+          )
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          setLeads((prev) => {
+            if (prev.some((l) => l.id === payload.new.id)) return prev
+            return [payload.new as Lead, ...prev]
+          })
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          setLeads((prev) => prev.filter((l) => l.id !== payload.old.id))
+        },
+      )
+      .subscribe()
+
+    // Limpeza de canal (unsubscribe)
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(messagesChannel)
+      supabase.removeChannel(leadsChannel)
     }
   }, [])
 
   const fetchInitialData = async () => {
     setLoading(true)
+
+    // Busca inicial de Leads
     const { data: leadsData, error: leadsError } = await supabase
       .from('leads')
       .select('*')
@@ -119,10 +157,13 @@ export default function Atendimento() {
 
     setLeads(leadsData || [])
 
+    // 3. RENDERIZAÇÃO DO HISTÓRICO:
+    // Busca de todas as mensagens ordenadas por created_at ASC
     const { data: msgsData, error: msgsError } = await supabase
       .from('messages')
       .select('*')
       .order('created_at', { ascending: true })
+
     if (msgsError) {
       toast({
         title: 'Erro',
