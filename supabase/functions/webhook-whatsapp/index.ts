@@ -15,10 +15,18 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url)
 
   if (req.method === 'GET') {
+    console.log('GET Handshake request URL:', req.url)
     const mode = url.searchParams.get('hub.mode')
     const token = url.searchParams.get('hub.verify_token')
     const challenge = url.searchParams.get('hub.challenge')
     const verifyToken = Deno.env.get('VERIFY_TOKEN') || 'km0_conexao_segura'
+
+    console.log('Handshake params:', {
+      mode,
+      token,
+      challenge,
+      expectedToken: verifyToken,
+    })
 
     if (mode === 'subscribe' && token === verifyToken) {
       return new Response(challenge, { status: 200 })
@@ -29,6 +37,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'POST') {
     try {
       const payload = await req.json()
+      console.log('Incoming POST payload:', JSON.stringify(payload, null, 2))
+
       if (payload.object !== 'whatsapp_business_account') {
         return new Response('Ignored', { status: 200 })
       }
@@ -385,7 +395,7 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (e: any) {
-      console.error(e)
+      console.error('Error processing webhook payload:', e)
       return new Response(JSON.stringify({ error: e.message }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

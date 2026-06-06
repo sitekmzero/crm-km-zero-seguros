@@ -504,6 +504,8 @@ export const Constants = {
 //   Policy "authenticated_all_leads" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+//   Policy "authenticated_select_leads" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: messages
 //   Policy "anon_insert_messages" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -512,6 +514,8 @@ export const Constants = {
 //   Policy "authenticated_all_messages" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+//   Policy "authenticated_select_messages" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: user_profiles
 //   Policy "authenticated_read_profiles" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
