@@ -23,7 +23,9 @@ export default function Atendimento() {
   useEffect(() => {
     fetchInitialData()
 
-    // 1. ASSINATURA REALTIME NO CHAT (Componente de Conversa):
+    // Mantemos um listener global apenas para atualizar as últimas mensagens
+    // e os cards da barra lateral de conversas de forma reativa.
+    // O chat detalhado e a query eq('lead_id', activeLeadId) já estão no ConversasView.tsx
     const messagesChannel = supabase
       .channel('schema-db-changes')
       .on(
@@ -35,10 +37,8 @@ export default function Atendimento() {
         },
         (payload) => {
           const newMsg = payload.new as Message
-          console.log('Realtime INSERT recebido para messages:', newMsg)
           setMessages((prev) => {
             const list = prev[newMsg.lead_id] || []
-            // Evita duplicação caso a mensagem já exista
             if (list.some((m) => m.id === newMsg.id)) return prev
             return {
               ...prev,
@@ -132,7 +132,6 @@ export default function Atendimento() {
       )
       .subscribe()
 
-    // Limpeza de canal (unsubscribe)
     return () => {
       supabase.removeChannel(messagesChannel)
       supabase.removeChannel(leadsChannel)
@@ -142,10 +141,10 @@ export default function Atendimento() {
   const fetchInitialData = async () => {
     setLoading(true)
 
-    // Busca inicial de Leads
     const { data: leadsData, error: leadsError } = await supabase
       .from('leads')
       .select('*')
+
     if (leadsError) {
       toast({
         title: 'Erro',
@@ -158,23 +157,16 @@ export default function Atendimento() {
 
     setLeads(leadsData || [])
 
-    // 3. RENDERIZAÇÃO DO HISTÓRICO:
-    // Busca de todas as mensagens ordenadas por created_at ASC
+    // Busca de mensagens recentes para a barra lateral (últimas interações)
+    // O SELECT detalhado por lead já está em ConversasView.tsx para cumprir:
+    // supabase.from('messages').select('*').eq('lead_id', activeLeadId)
     const { data: msgsData, error: msgsError } = await supabase
       .from('messages')
       .select('*')
       .order('created_at', { ascending: true })
 
     if (msgsError) {
-      console.error(
-        'Falha ao buscar histórico de mensagens (Possível bloqueio de RLS ou falha silenciosa):',
-        msgsError,
-      )
-      toast({
-        title: 'Erro de Permissão ou Banco',
-        description: msgsError.message,
-        variant: 'destructive',
-      })
+      console.error('Falha ao buscar histórico global de mensagens:', msgsError)
     } else {
       const grouped = (msgsData || []).reduce(
         (acc: Record<string, Message[]>, msg: any) => {

@@ -35,20 +35,98 @@ interface ConversasViewProps {
 
 export function ConversasView({
   leads,
-  messages,
+  messages: globalMessages,
   loading,
 }: ConversasViewProps) {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
+  const [activeMessages, setActiveMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [search, setSearch] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
+  // 3. CONSULTA INICIAL (SELECT) E 4. TRATAMENTO DO REALTIME NO FRONTEND
+  useEffect(() => {
+    if (!selectedLeadId) {
+      setActiveMessages([])
+      return
+    }
+
+    const fetchActiveMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('lead_id', selectedLeadId)
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        console.error('Erro ao buscar mensagens do chat:', error)
+      } else if (data) {
+        setActiveMessages(data)
+      }
+    }
+
+    fetchActiveMessages()
+
+    const channel = supabase
+      .channel(`chat-lead-${selectedLeadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `lead_id=eq.${selectedLeadId}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message
+          setActiveMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev
+            return [...prev, newMsg]
+          })
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `lead_id=eq.${selectedLeadId}`,
+        },
+        (payload) => {
+          const updMsg = payload.new as Message
+          setActiveMessages((prev) =>
+            prev.map((m) => (m.id === updMsg.id ? updMsg : m)),
+          )
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `lead_id=eq.${selectedLeadId}`,
+        },
+        (payload) => {
+          setActiveMessages((prev) =>
+            prev.filter((m) => m.id !== payload.old.id),
+          )
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [selectedLeadId])
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, selectedLeadId])
+  }, [activeMessages, selectedLeadId])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,8 +212,20 @@ export function ConversasView({
         l.phone.includes(search),
     )
     .sort((a, b) => {
-      const aLastMsg = messages[a.id]?.slice(-1)[0]
-      const bLastMsg = messages[b.id]?.slice(-1)[0]
+      // Para a ordenação da lista lateral e a pré-visualização,
+      // usamos o globalMessages (que já vem do Atendimento.tsx ou do cache).
+      // Se tiver activeMessages do próprio lead (pois está selecionado), pode usar também, mas o global funciona para todos.
+      const aMessages =
+        a.id === selectedLeadId && activeMessages.length > 0
+          ? activeMessages
+          : globalMessages[a.id] || []
+      const bMessages =
+        b.id === selectedLeadId && activeMessages.length > 0
+          ? activeMessages
+          : globalMessages[b.id] || []
+
+      const aLastMsg = aMessages.slice(-1)[0]
+      const bLastMsg = bMessages.slice(-1)[0]
       const aTime = aLastMsg
         ? new Date(aLastMsg.created_at).getTime()
         : new Date(a.updated_at).getTime()
@@ -146,7 +236,7 @@ export function ConversasView({
     })
 
   const selectedLead = leads.find((l) => l.id === selectedLeadId)
-  const currentMessages = selectedLeadId ? messages[selectedLeadId] || [] : []
+  const currentMessages = activeMessages
 
   return (
     <div className="flex w-full h-full">
@@ -178,8 +268,13 @@ export function ConversasView({
             </div>
           ) : (
             sortedLeads.map((lead) => {
-              const lastMsg = messages[lead.id]?.slice(-1)[0]
+              const leadMessages =
+                lead.id === selectedLeadId && activeMessages.length > 0
+                  ? activeMessages
+                  : globalMessages[lead.id] || []
+              const lastMsg = leadMessages.slice(-1)[0]
               const isSelected = selectedLeadId === lead.id
+
               return (
                 <button
                   key={lead.id}
@@ -284,12 +379,13 @@ export function ConversasView({
               ref={scrollRef}
             >
               {currentMessages.map((msg) => {
-                // RENDERIZAÇÃO DOS BALÕES DE CHAT POR SENDER
+                // 1. CORREÇÃO DE MAPEAMENTO DE ENUM NO FRONTEND
                 // 'lead' -> balão à esquerda (branco/claro do cliente)
                 // 'ia' ou 'humano' -> balão à direita (escuro/colorido da empresa)
                 const isLead = msg.sender === 'lead'
                 const isIA = msg.sender === 'ia'
                 const isHumano = msg.sender === 'humano'
+
                 return (
                   <div
                     key={msg.id}
@@ -336,6 +432,7 @@ export function ConversasView({
                         {isLead && <>{selectedLead.name}</>}
                       </div>
                       <div className="whitespace-pre-wrap text-[13px] sm:text-sm leading-relaxed">
+                        {/* 2. CORREÇÃO DA COLUNA DE TEXTO */}
                         {msg.content}
                       </div>
                       {msg.is_draft && isIA && (
