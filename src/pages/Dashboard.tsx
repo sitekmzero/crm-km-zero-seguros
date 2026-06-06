@@ -135,10 +135,18 @@ export default function Dashboard() {
     const next30 = new Date()
     next30.setDate(next30.getDate() + 30)
     const { data: pol } = await supabase
-      .from('policies')
+      .from('quotations')
       .select('*, contacts(first_name)')
-      .lte('expiration_date', next30.toISOString())
-    if (pol) setPolicies(pol)
+
+    if (pol) {
+      const expiring = pol.filter((p: any) => {
+        const expDate =
+          p.dados_cotacao?.expiration_date || p.dados_cotacao?.data_vencimento
+        if (!expDate) return false
+        return new Date(expDate) <= next30
+      })
+      setPolicies(expiring)
+    }
 
     setLoading(false)
   }
@@ -367,16 +375,25 @@ export default function Dashboard() {
                       <p className="font-semibold text-sm">
                         {p.contacts?.first_name}{' '}
                         <span className="text-muted-foreground font-normal">
-                          ({p.product_type})
+                          ({p.tipo_produto || p.product_type})
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Apólice: {p.policy_number}
+                        Apólice:{' '}
+                        {p.dados_cotacao?.policy_number ||
+                          p.dados_cotacao?.numero_apolice ||
+                          'N/D'}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-red-600">
-                        {format(new Date(p.expiration_date), 'dd/MM/yyyy')}
+                        {format(
+                          new Date(
+                            p.dados_cotacao?.expiration_date ||
+                              p.dados_cotacao?.data_vencimento,
+                          ),
+                          'dd/MM/yyyy',
+                        )}
                       </p>
                       <Button
                         size="sm"
