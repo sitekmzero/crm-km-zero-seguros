@@ -139,32 +139,40 @@ Deno.serve(async (req: Request) => {
 
       // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
-        const { error: insertMsgError } = await supabase
-          .schema('public')
-          .from('messages')
-          .insert({
-            lead_id: lead.id,
-            sender: 'lead',
-            content: messageBody,
-          })
-        if (insertMsgError)
-          throw new Error(`Message insert error: ${insertMsgError.message}`)
-
-        await supabase
-          .schema('public')
-          .from('leads')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', lead.id)
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Lead is in human handover',
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
+        console.log(
+          'IA inativa para este lead. Salvando mensagem do cliente no banco...',
         )
+        try {
+          const { error: insertMsgError } = await supabase
+            .schema('public')
+            .from('messages')
+            .insert({
+              lead_id: lead.id,
+              sender: 'lead',
+              content: messageBody,
+            })
+          if (insertMsgError) throw insertMsgError
+
+          await supabase
+            .schema('public')
+            .from('leads')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', lead.id)
+
+          console.log(
+            'Mensagem do cliente gravada com sucesso. Respondendo 200 OK para a Meta.',
+          )
+        } catch (err: any) {
+          console.error(
+            'Erro ao salvar mensagem do lead inativo no banco: ',
+            err,
+          )
+        }
+
+        return new Response('OK', {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+        })
       }
 
       const { error: insertMsgError } = await supabase
