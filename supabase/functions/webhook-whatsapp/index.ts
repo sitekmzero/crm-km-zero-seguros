@@ -142,32 +142,33 @@ Deno.serve(async (req: Request) => {
         console.log(
           'IA inativa para este lead. Salvando mensagem do cliente no banco...',
         )
-        try {
-          const { error: insertMsgError } = await supabase
-            .schema('public')
-            .from('messages')
-            .insert({
-              lead_id: lead.id,
-              sender: 'lead',
-              content: messageBody,
-            })
-          if (insertMsgError) throw insertMsgError
 
-          await supabase
-            .schema('public')
-            .from('leads')
-            .update({ updated_at: new Date().toISOString() })
-            .eq('id', lead.id)
+        const { data, error: insertError } = await supabase
+          .schema('public')
+          .from('messages')
+          .insert({
+            lead_id: lead.id,
+            sender: 'lead',
+            content: messageBody,
+          })
 
-          console.log(
-            'Mensagem do cliente gravada com sucesso. Respondendo 200 OK para a Meta.',
-          )
-        } catch (err: any) {
+        if (insertError) {
           console.error(
-            'Erro ao salvar mensagem do lead inativo no banco: ',
-            err,
+            'Erro detalhado do Supabase ao gravar mensagem de lead inativo: ',
+            insertError,
           )
+          throw new Error(`Falha na gravação do banco: ${insertError.message}`)
         }
+
+        await supabase
+          .schema('public')
+          .from('leads')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', lead.id)
+
+        console.log(
+          'Mensagem do cliente gravada com sucesso. Respondendo 200 OK para a Meta.',
+        )
 
         return new Response('OK', {
           status: 200,
