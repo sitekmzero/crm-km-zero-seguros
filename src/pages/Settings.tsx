@@ -46,28 +46,40 @@ export default function Settings() {
 
   const fetchVendorConfig = async () => {
     const { data } = await supabase
-      .from('vendor_config')
+      .from('configs')
       .select('*')
-      .eq('user_id', user!.id)
+      .eq('key', `vendor_config_${user!.id}`)
       .maybeSingle()
-    if (data) {
-      setN8nUrl(data.n8n_webhook_url || '')
-      setPipedriveKey(data.pipedrive_api_key || '')
-      setSpecialties(data.specialties?.join(', ') || '')
+    if (data && data.value) {
+      try {
+        const parsed = JSON.parse(data.value)
+        setN8nUrl(parsed.n8n_webhook_url || '')
+        setPipedriveKey(parsed.pipedrive_api_key || '')
+        setSpecialties(parsed.specialties?.join(', ') || '')
+      } catch {
+        /* intentionally ignored */
+      }
     }
   }
 
   const fetchCompanyConfig = async () => {
     const { data } = await supabase
-      .from('corretora_config')
+      .from('configs')
       .select('*')
-      .single()
-    if (data) setCompanyInfo(data)
+      .eq('key', 'company_info')
+      .maybeSingle()
+    if (data && data.value) {
+      try {
+        const parsed = JSON.parse(data.value)
+        setCompanyInfo({ ...companyInfo, ...parsed })
+      } catch {
+        /* intentionally ignored */
+      }
+    }
   }
 
   const saveIntegrations = async () => {
-    const { error } = await supabase.from('vendor_config').upsert({
-      user_id: user!.id,
+    const value = JSON.stringify({
       n8n_webhook_url: n8nUrl,
       pipedrive_api_key: pipedriveKey,
       specialties: specialties
@@ -75,6 +87,13 @@ export default function Settings() {
         .map((s) => s.trim())
         .filter(Boolean),
     })
+    const { error } = await supabase.from('configs').upsert(
+      {
+        key: `vendor_config_${user!.id}`,
+        value,
+      },
+      { onConflict: 'key' },
+    )
     if (error)
       toast({
         title: 'Erro',
@@ -85,9 +104,10 @@ export default function Settings() {
   }
 
   const saveCompanyInfo = async () => {
+    const value = JSON.stringify(companyInfo)
     const { error } = await supabase
-      .from('corretora_config')
-      .upsert({ id: '00000000-0000-0000-0000-000000000000', ...companyInfo })
+      .from('configs')
+      .upsert({ key: 'company_info', value }, { onConflict: 'key' })
     if (error)
       toast({
         title: 'Erro',
