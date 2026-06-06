@@ -72,6 +72,72 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          cep: string | null
+          company_name: string | null
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_activity_date: string | null
+          last_name: string | null
+          lead_score: number | null
+          modelo_captura: string | null
+          observacoes: string | null
+          phone: string | null
+          probability: number | null
+          produto_interesse: string | null
+          proprietario_id: string | null
+          stage_updated_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_activity_date?: string | null
+          last_name?: string | null
+          lead_score?: number | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          probability?: number | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          stage_updated_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cep?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_activity_date?: string | null
+          last_name?: string | null
+          lead_score?: number | null
+          modelo_captura?: string | null
+          observacoes?: string | null
+          phone?: string | null
+          probability?: number | null
+          produto_interesse?: string | null
+          proprietario_id?: string | null
+          stage_updated_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           ai_active: boolean
@@ -139,6 +205,27 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_admin?: boolean | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean | null
+          role?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -321,6 +408,26 @@ export const Constants = {
 //   value: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+// Table: contacts
+//   id: uuid (not null, default: gen_random_uuid())
+//   first_name: text (nullable)
+//   last_name: text (nullable)
+//   email: text (nullable)
+//   phone: text (nullable)
+//   company_name: text (nullable)
+//   status: text (nullable, default: 'subscriber'::text)
+//   cpf: text (nullable)
+//   cep: text (nullable)
+//   produto_interesse: text (nullable)
+//   modelo_captura: text (nullable)
+//   observacoes: text (nullable)
+//   proprietario_id: uuid (nullable)
+//   lead_score: integer (nullable, default: 0)
+//   probability: integer (nullable, default: 0)
+//   stage_updated_at: timestamp with time zone (nullable, default: now())
+//   last_activity_date: timestamp with time zone (nullable, default: now())
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -337,6 +444,11 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   is_draft: boolean (nullable, default: false)
 //   feedback: text (nullable)
+// Table: user_profiles
+//   id: uuid (not null)
+//   is_admin: boolean (nullable, default: false)
+//   role: text (nullable, default: 'user'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
 // Table: app_notifications
@@ -345,6 +457,9 @@ export const Constants = {
 // Table: configs
 //   UNIQUE configs_key_key: UNIQUE (key)
 //   PRIMARY KEY configs_pkey: PRIMARY KEY (id)
+// Table: contacts
+//   PRIMARY KEY contacts_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY contacts_proprietario_id_fkey: FOREIGN KEY (proprietario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: leads
 //   UNIQUE leads_phone_key: UNIQUE (phone)
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
@@ -352,6 +467,9 @@ export const Constants = {
 //   CHECK messages_feedback_check: CHECK ((feedback = ANY (ARRAY['positive'::text, 'negative'::text])))
 //   FOREIGN KEY messages_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY messages_pkey: PRIMARY KEY (id)
+// Table: user_profiles
+//   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: app_notifications
@@ -362,10 +480,17 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can view their own notifications" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+//   Policy "authenticated_all_notifications" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: configs
 //   Policy "anon_select_configs" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true
 //   Policy "authenticated_all_configs" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: contacts
+//   Policy "authenticated_all_contacts" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: leads
@@ -387,6 +512,9 @@ export const Constants = {
 //   Policy "authenticated_all_messages" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: user_profiles
+//   Policy "authenticated_read_profiles" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 
 // --- INDEXES ---
 // Table: configs

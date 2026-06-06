@@ -23,8 +23,8 @@ export default function Atendimento() {
   useEffect(() => {
     fetchInitialData()
 
-    const leadsSub = supabase
-      .channel('public:leads')
+    const channel = supabase
+      .channel('atendimento_realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'leads' },
@@ -37,22 +37,24 @@ export default function Atendimento() {
                 l.id === payload.new.id ? (payload.new as Lead) : l,
               ),
             )
+          } else if (payload.eventType === 'DELETE') {
+            setLeads((prev) => prev.filter((l) => l.id !== payload.old.id))
           }
         },
       )
-      .subscribe()
-
-    const msgsSub = supabase
-      .channel('public:messages')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
           const newMsg = payload.new as Message
-          setMessages((prev) => ({
-            ...prev,
-            [newMsg.lead_id]: [...(prev[newMsg.lead_id] || []), newMsg],
-          }))
+          setMessages((prev) => {
+            const list = prev[newMsg.lead_id] || []
+            if (list.some((m) => m.id === newMsg.id)) return prev
+            return {
+              ...prev,
+              [newMsg.lead_id]: [...list, newMsg],
+            }
+          })
         },
       )
       .on(
@@ -71,11 +73,29 @@ export default function Atendimento() {
           })
         },
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'messages' },
+        (payload) => {
+          setMessages((prev) => {
+            const newState = { ...prev }
+            for (const leadId in newState) {
+              newState[leadId] = newState[leadId].filter(
+                (m) => m.id !== payload.old.id,
+              )
+            }
+            return newState
+          })
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime for Atendimento subscribed successfully!')
+        }
+      })
 
     return () => {
-      supabase.removeChannel(leadsSub)
-      supabase.removeChannel(msgsSub)
+      supabase.removeChannel(channel)
     }
   }, [])
 

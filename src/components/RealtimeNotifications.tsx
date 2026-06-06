@@ -14,7 +14,7 @@ export function RealtimeNotifications() {
       .channel('global_notifications')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'crm', table: 'contacts' },
+        { event: 'INSERT', schema: 'public', table: 'contacts' },
         (payload) => {
           if (payload.new.proprietario_id === user.id) {
             toast('Novo Contato Atribuído!', {
@@ -26,7 +26,7 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'crm', table: 'contacts' },
+        { event: 'UPDATE', schema: 'public', table: 'contacts' },
         (payload) => {
           if (
             payload.new.proprietario_id === user.id &&
@@ -37,18 +37,6 @@ export function RealtimeNotifications() {
             toast('Status Atualizado', {
               description: `${payload.new.first_name} mudou para ${payload.new.status.replace(/_/g, ' ')}.`,
               icon: <RefreshCw className="h-4 w-4 text-blue-500" />,
-            })
-          }
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'crm', table: 'internal_messages' },
-        (payload) => {
-          if (payload.new.user_id !== user.id) {
-            toast('Nova Mensagem no Chat', {
-              description: 'Você tem uma nova mensagem interna em um contato.',
-              icon: <MessageCircle className="h-4 w-4 text-primary" />,
             })
           }
         },
