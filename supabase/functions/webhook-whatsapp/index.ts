@@ -36,6 +36,7 @@ Deno.serve(async (req: Request) => {
 
   if (req.method === 'POST') {
     try {
+      console.log('Iniciando processamento da mensagem do WhatsApp...')
       const payload = await req.json()
       console.log('Incoming POST payload:', JSON.stringify(payload, null, 2))
 
@@ -79,6 +80,7 @@ Deno.serve(async (req: Request) => {
       const phoneRaw = phone || ''
       const normalizedPhone = phoneRaw.replace(/\D/g, '')
 
+      console.log('Tentando conectar ao banco de dados Supabase...')
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
@@ -130,6 +132,10 @@ Deno.serve(async (req: Request) => {
         if (error) throw new Error(`Lead insert error: ${error.message}`)
         lead = newLead
       }
+
+      console.log(
+        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active}`,
+      )
 
       // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
@@ -230,6 +236,8 @@ Deno.serve(async (req: Request) => {
       const geminiKey = Deno.env.get('GEMINI_API_KEY')
       if (!geminiKey) throw new Error('GEMINI_API_KEY missing')
 
+      console.log('Enviando histórico de conversas para o Gemini 3.5 Flash...')
+
       // ROTA DA API E MODELO (gemini-3.5-flash)
       const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
@@ -253,6 +261,8 @@ Deno.serve(async (req: Request) => {
 
       const geminiData = await geminiRes.json()
       const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+      console.log(`Resposta recebida do Gemini: ${aiText}`)
 
       let newStatus = lead.status
       let newAiActive = lead.ai_active
@@ -312,6 +322,7 @@ Deno.serve(async (req: Request) => {
           if (!waToken || !waPhoneId)
             throw new Error('WhatsApp API credentials missing')
 
+          console.log('Disparando requisição POST para a Graph API da Meta...')
           const { error: invokeError } = await supabase.functions.invoke(
             'send-whatsapp',
             {
@@ -321,6 +332,10 @@ Deno.serve(async (req: Request) => {
 
           if (invokeError) {
             console.error('[INVOKE_ERROR]', invokeError)
+          } else {
+            console.log(
+              'Mensagem enviada com sucesso para o cliente via Meta Cloud API.',
+            )
           }
         }
       }
@@ -369,7 +384,10 @@ Deno.serve(async (req: Request) => {
               Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
             if (waToken && waPhoneId) {
               const messageToHuman = `*Novo Lead Roteado: ${contactName} (${phone})*\n\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
-              await fetch(
+              console.log(
+                'Disparando requisição POST para a Graph API da Meta (Roteamento)...',
+              )
+              const routingRes = await fetch(
                 `https://graph.facebook.com/v17.0/${waPhoneId}/messages`,
                 {
                   method: 'POST',
@@ -384,6 +402,18 @@ Deno.serve(async (req: Request) => {
                   }),
                 },
               )
+
+              if (!routingRes.ok) {
+                const errorData = await routingRes.text()
+                console.error(
+                  'Erro ao enviar mensagem de roteamento:',
+                  errorData,
+                )
+              } else {
+                console.log(
+                  'Mensagem enviada com sucesso para o cliente via Meta Cloud API (Roteamento).',
+                )
+              }
             }
           }
         } catch (err) {
@@ -395,7 +425,7 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (e: any) {
-      console.error('Error processing webhook payload:', e)
+      console.error('ERRO CRÍTICO NA EXECUÇÃO DO WEBHOOK: ', e.message, e.stack)
       return new Response(JSON.stringify({ error: e.message }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
