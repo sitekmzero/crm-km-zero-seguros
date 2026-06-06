@@ -91,7 +91,11 @@ export function ConversasView({
   }
 
   const handleDeleteDraft = async (msgId: string) => {
-    const { error } = await supabase.from('messages').delete().eq('id', msgId)
+    const { error } = await supabase
+      .schema('public')
+      .from('messages')
+      .delete()
+      .eq('id', msgId)
     if (error) {
       toast({
         title: 'Erro ao excluir rascunho',
@@ -108,6 +112,7 @@ export function ConversasView({
     feedback: 'positive' | 'negative',
   ) => {
     const { error } = await supabase
+      .schema('public')
       .from('messages')
       .update({ feedback } as any)
       .eq('id', msgId)

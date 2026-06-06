@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       supabase
+        .schema('public')
         .from('user_profiles')
         .select('is_admin, role')
         .eq('id', user.id)
