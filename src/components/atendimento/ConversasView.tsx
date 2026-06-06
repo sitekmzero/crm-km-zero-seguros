@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
+import { Switch } from '@/components/ui/switch'
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
@@ -381,49 +382,52 @@ export function ConversasView({
                   aiActive={selectedLead.ai_active}
                 />
               </div>
-              <Button
-                variant={selectedLead.ai_active ? 'outline' : 'default'}
-                size="sm"
-                className={cn(
-                  'whitespace-nowrap transition-all',
-                  selectedLead.ai_active
-                    ? 'border-primary text-primary hover:bg-primary/10'
-                    : '',
-                )}
-                onClick={async () => {
-                  const newAiActive = !selectedLead.ai_active
-                  const { error } = await supabase
-                    .from('leads')
-                    .update({ ai_active: newAiActive })
-                    .eq('id', selectedLead.id)
-                  if (error) {
-                    toast({
-                      title: 'Erro',
-                      description: error.message,
-                      variant: 'destructive',
-                    })
-                  } else {
-                    toast({
-                      title: newAiActive
-                        ? 'IA Ativada'
-                        : 'Atendimento assumido',
-                      description: newAiActive
-                        ? 'A IA voltou a responder.'
-                        : 'Você assumiu esta conversa.',
-                    })
-                  }
-                }}
-              >
-                {selectedLead.ai_active ? (
-                  <>
-                    <User className="w-4 h-4 mr-2" /> Assumir Atendimento
-                  </>
-                ) : (
-                  <>
-                    <Bot className="w-4 h-4 mr-2" /> Ativar IA
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-background shadow-sm">
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    !selectedLead.ai_active
+                      ? 'text-primary'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  Humano
+                </span>
+                <Switch
+                  checked={selectedLead.ai_active}
+                  onCheckedChange={async (checked) => {
+                    const { error } = await supabase
+                      .from('leads')
+                      .update({ ai_active: checked })
+                      .eq('id', selectedLead.id)
+                    if (error) {
+                      toast({
+                        title: 'Erro',
+                        description: error.message,
+                        variant: 'destructive',
+                      })
+                    } else {
+                      toast({
+                        title: checked ? 'IA Ativada' : 'Atendimento assumido',
+                        description: checked
+                          ? 'A IA voltou a responder.'
+                          : 'Você assumiu esta conversa.',
+                      })
+                    }
+                  }}
+                />
+                <span
+                  className={cn(
+                    'text-xs font-medium flex items-center gap-1',
+                    selectedLead.ai_active
+                      ? 'text-primary'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  <Bot className="w-3 h-3" />
+                  IA
+                </span>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
