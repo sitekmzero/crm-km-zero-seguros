@@ -42,7 +42,6 @@ export function ConversasView({
   const [activeMessages, setActiveMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [search, setSearch] = useState('')
-  const scrollRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
   // 3. CONSULTA INICIAL (SELECT) E 4. TRATAMENTO DO REALTIME NO FRONTEND
@@ -73,6 +72,10 @@ export function ConversasView({
         console.error('Erro ao buscar mensagens do chat:', error)
       } else if (data) {
         setActiveMessages(data)
+        console.log(
+          '🟢 [CRM] Estado React de mensagens atualizado com sucesso:',
+          data.length,
+        )
       }
     }
 
@@ -141,11 +144,11 @@ export function ConversasView({
     }
   }, [selectedLeadId])
 
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [activeMessages, selectedLeadId])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [activeMessages])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -393,10 +396,7 @@ export function ConversasView({
               </div>
             </div>
 
-            <div
-              className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20"
-              ref={scrollRef}
-            >
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
               {currentMessages.map((msg) => {
                 // 1. CORREÇÃO DE MAPEAMENTO DE ENUM NO FRONTEND
                 // 'lead' -> balão à esquerda (branco/claro do cliente)
@@ -538,6 +538,7 @@ export function ConversasView({
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 bg-card border-t shrink-0">

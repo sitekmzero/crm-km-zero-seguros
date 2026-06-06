@@ -273,6 +273,30 @@ export type Database = {
           },
         ]
       }
+      training_progress: {
+        Row: {
+          created_at: string
+          id: string
+          module_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_id: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -524,6 +548,12 @@ export const Constants = {
 //   dados_cotacao: jsonb (not null, default: '{}'::jsonb)
 //   status: text (not null, default: 'pendente'::text)
 //   data_criacao: timestamp with time zone (not null, default: now())
+// Table: training_progress
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   module_id: text (not null)
+//   score: integer (not null, default: 0)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: user_profiles
 //   id: uuid (not null)
 //   is_admin: boolean (nullable, default: false)
@@ -553,6 +583,9 @@ export const Constants = {
 // Table: quotations
 //   FOREIGN KEY quotations_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   PRIMARY KEY quotations_pkey: PRIMARY KEY (id)
+// Table: training_progress
+//   PRIMARY KEY training_progress_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY training_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
@@ -610,6 +643,16 @@ export const Constants = {
 //   Policy "authenticated_all_quotations" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: training_progress
+//   Policy "Admins can view all training progress" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Users can insert their own training progress" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can update their own training progress" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can view their own training progress" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 // Table: user_profiles
 //   Policy "authenticated_read_profiles" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
