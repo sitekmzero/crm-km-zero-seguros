@@ -70,6 +70,7 @@ Deno.serve(async (req: Request) => {
       const supabase = createClient(supabaseUrl, supabaseKey)
 
       let { data: lead, error: fetchError } = await supabase
+        .schema('public')
         .from('leads')
         .select('*')
         .eq('phone', phone)
@@ -78,6 +79,7 @@ Deno.serve(async (req: Request) => {
 
       if (!lead) {
         const { data: newLead, error } = await supabase
+          .schema('public')
           .from('leads')
           .insert({ phone, name: contactName, status: 'novo', ai_active: true })
           .select('*')
@@ -89,6 +91,7 @@ Deno.serve(async (req: Request) => {
       // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
         const { error: insertMsgError } = await supabase
+          .schema('public')
           .from('messages')
           .insert({
             lead_id: lead.id,
@@ -109,16 +112,20 @@ Deno.serve(async (req: Request) => {
         )
       }
 
-      const { error: insertMsgError } = await supabase.from('messages').insert({
-        lead_id: lead.id,
-        sender: 'lead',
-        content: messageBody,
-      })
+      const { error: insertMsgError } = await supabase
+        .schema('public')
+        .from('messages')
+        .insert({
+          lead_id: lead.id,
+          sender: 'lead',
+          content: messageBody,
+        })
       if (insertMsgError)
         throw new Error(`Message insert error: ${insertMsgError.message}`)
 
       // 1. LIMITE DA JANELA DE HISTÓRICO
       const { data: historyData, error: historyError } = await supabase
+        .schema('public')
         .from('messages')
         .select('sender, content')
         .eq('lead_id', lead.id)
@@ -128,6 +135,7 @@ Deno.serve(async (req: Request) => {
         throw new Error(`History fetch error: ${historyError.message}`)
 
       const { data: configData, error: configError } = await supabase
+        .schema('public')
         .from('configs')
         .select('key, value')
         .in('key', ['sdr_system_prompt', 'learning_mode_active'])
@@ -218,6 +226,7 @@ Deno.serve(async (req: Request) => {
       if (cleanText) {
         if (newStatus !== lead.status || newAiActive !== lead.ai_active) {
           const { error: updateError } = await supabase
+            .schema('public')
             .from('leads')
             .update({
               status: newStatus,
@@ -230,17 +239,20 @@ Deno.serve(async (req: Request) => {
         }
 
         if (isLearningMode) {
-          const { error: draftError } = await supabase.from('messages').insert({
-            lead_id: lead.id,
-            sender: 'ia',
-            content: cleanText,
-            is_draft: true,
-          })
+          const { error: draftError } = await supabase
+            .schema('public')
+            .from('messages')
+            .insert({
+              lead_id: lead.id,
+              sender: 'ia',
+              content: cleanText,
+              is_draft: true,
+            })
           if (draftError) console.error('[DRAFT_ERROR]', draftError)
         } else {
           const waToken = Deno.env.get('META_ACCESS_TOKEN')
           const waPhoneId =
-            Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
+            Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
           if (!waToken || !waPhoneId)
             throw new Error('WhatsApp API credentials missing')
 
@@ -298,7 +310,7 @@ Deno.serve(async (req: Request) => {
 
             const waToken = Deno.env.get('META_ACCESS_TOKEN')
             const waPhoneId =
-              Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
+              Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
             if (waToken && waPhoneId) {
               const messageToHuman = `*Novo Lead Roteado: ${contactName} (${phone})*\n\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
               await fetch(

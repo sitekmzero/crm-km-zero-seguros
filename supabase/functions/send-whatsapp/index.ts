@@ -20,6 +20,7 @@ Deno.serve(async (req: Request) => {
     )
 
     const { data: lead, error: fetchError } = await supabase
+      .schema('public')
       .from('leads')
       .select('phone, ai_active')
       .eq('id', lead_id)
@@ -29,6 +30,7 @@ Deno.serve(async (req: Request) => {
 
     if (sender === 'humano' && lead.ai_active) {
       await supabase
+        .schema('public')
         .from('leads')
         .update({
           ai_active: false,
@@ -40,6 +42,7 @@ Deno.serve(async (req: Request) => {
 
     if (message_id) {
       await supabase
+        .schema('public')
         .from('messages')
         .update({
           sender,
@@ -48,7 +51,7 @@ Deno.serve(async (req: Request) => {
         })
         .eq('id', message_id)
     } else {
-      await supabase.from('messages').insert({
+      await supabase.schema('public').from('messages').insert({
         lead_id,
         sender,
         content,
@@ -58,7 +61,7 @@ Deno.serve(async (req: Request) => {
 
     const waToken = Deno.env.get('META_ACCESS_TOKEN')
     const waPhoneId =
-      Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
+      Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
     if (waToken && waPhoneId && lead?.phone) {
       await fetch(`https://graph.facebook.com/v17.0/${waPhoneId}/messages`, {
         method: 'POST',

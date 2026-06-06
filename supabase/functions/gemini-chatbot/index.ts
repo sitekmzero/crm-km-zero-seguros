@@ -22,6 +22,7 @@ Deno.serve(async (req: Request) => {
 
     // Fetch dynamic configurations
     const { data: configData } = await supabase
+      .schema('public')
       .from('configs')
       .select('key, value')
       .in('key', ['sdr_system_prompt', 'learning_mode_active'])
@@ -62,7 +63,7 @@ Deno.serve(async (req: Request) => {
     if (lead_id) {
       if (isLearningMode) {
         // Save as draft, human-in-the-loop will review
-        await supabase.from('messages').insert({
+        await supabase.schema('public').from('messages').insert({
           lead_id,
           sender: 'ia',
           content: botReply,
@@ -76,11 +77,14 @@ Deno.serve(async (req: Request) => {
       }
     } else {
       // Legacy fallback for generic sessions
-      await supabase.from('chatbot_conversations').insert({
-        crisp_session_id: session_id || 'anonymous',
-        user_message: message,
-        bot_response: botReply,
-      })
+      await supabase
+        .schema('public')
+        .from('chatbot_conversations')
+        .insert({
+          crisp_session_id: session_id || 'anonymous',
+          user_message: message,
+          bot_response: botReply,
+        })
     }
 
     return new Response(JSON.stringify({ reply: botReply }), {
