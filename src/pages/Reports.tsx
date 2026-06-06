@@ -32,24 +32,25 @@ export default function Reports() {
     // Fetch funnel data
     const { data: contacts } = await supabase
       .from('contacts')
-      .select('status, proprietario_id, user_profiles(full_name)')
+      .select('status, proprietario_id')
     if (contacts) {
       const counts: Record<string, number> = {}
       const vendors: Record<string, any> = {}
 
       contacts.forEach((c) => {
-        counts[c.status] = (counts[c.status] || 0) + 1
+        const status = c.status || 'subscriber'
+        counts[status] = (counts[status] || 0) + 1
 
-        if (c.proprietario_id && c.user_profiles) {
+        if (c.proprietario_id) {
           const vId = c.proprietario_id
           if (!vendors[vId])
             vendors[vId] = {
-              name: c.user_profiles.full_name || 'Vendedor',
+              name: 'Vendedor',
               leads: 0,
               customers: 0,
             }
           vendors[vId].leads++
-          if (c.status === 'customer') vendors[vId].customers++
+          if (status === 'customer') vendors[vId].customers++
         }
       })
 
