@@ -53,7 +53,6 @@ export default function TreinamentoRelatorio() {
       .select('id, full_name, email')
       .eq('status', 'ativo')
     const { data: progress } = await supabase
-      .schema('crm' as any)
       .from('training_progress')
       .select('*')
 
