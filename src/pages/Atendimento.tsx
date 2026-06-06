@@ -35,6 +35,7 @@ export default function Atendimento() {
         },
         (payload) => {
           const newMsg = payload.new as Message
+          console.log('Realtime INSERT recebido para messages:', newMsg)
           setMessages((prev) => {
             const list = prev[newMsg.lead_id] || []
             // Evita duplicação caso a mensagem já exista
@@ -165,8 +166,12 @@ export default function Atendimento() {
       .order('created_at', { ascending: true })
 
     if (msgsError) {
+      console.error(
+        'Falha ao buscar histórico de mensagens (Possível bloqueio de RLS ou falha silenciosa):',
+        msgsError,
+      )
       toast({
-        title: 'Erro',
+        title: 'Erro de Permissão ou Banco',
         description: msgsError.message,
         variant: 'destructive',
       })

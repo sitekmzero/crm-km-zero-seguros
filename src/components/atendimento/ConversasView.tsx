@@ -284,6 +284,9 @@ export function ConversasView({
               ref={scrollRef}
             >
               {currentMessages.map((msg) => {
+                // RENDERIZAÇÃO DOS BALÕES DE CHAT POR SENDER
+                // 'lead' -> balão à esquerda (branco/claro do cliente)
+                // 'ia' ou 'humano' -> balão à direita (escuro/colorido da empresa)
                 const isLead = msg.sender === 'lead'
                 const isIA = msg.sender === 'ia'
                 const isHumano = msg.sender === 'humano'
