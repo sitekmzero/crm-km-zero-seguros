@@ -55,7 +55,7 @@ export function RealtimeNotifications() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'crm', table: 'app_notifications' },
+        { event: 'INSERT', schema: 'public', table: 'app_notifications' },
         (payload) => {
           if (payload.new.user_id === user.id) {
             const isUrgent = payload.new.priority === 'high'
