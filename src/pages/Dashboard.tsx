@@ -69,7 +69,6 @@ export default function Dashboard() {
     startDate.setDate(startDate.getDate() - parseInt(period))
 
     let query = supabase
-      .schema('crm' as any)
       .from('contacts')
       .select('status, created_at, produto_interesse, proprietario_id')
       .gte('created_at', startDate.toISOString())
@@ -136,7 +135,6 @@ export default function Dashboard() {
     const next30 = new Date()
     next30.setDate(next30.getDate() + 30)
     const { data: pol } = await supabase
-      .schema('crm' as any)
       .from('policies')
       .select('*, contacts(first_name)')
       .lte('expiration_date', next30.toISOString())
