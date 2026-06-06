@@ -35,7 +35,6 @@ export default function Documents() {
 
   const fetchDocs = async () => {
     let query = supabase
-      .schema('crm' as any)
       .from('documents')
       .select('*, contacts(first_name, last_name, proprietario_id)')
       .order('uploaded_at', { ascending: false })
@@ -71,11 +70,7 @@ export default function Documents() {
   const handleDelete = async (id: string, path: string) => {
     if (!confirm('Deseja realmente excluir este documento?')) return
     await supabase.storage.from('documents').remove([path])
-    await supabase
-      .schema('crm' as any)
-      .from('documents')
-      .delete()
-      .eq('id', id)
+    await supabase.from('documents').delete().eq('id', id)
     toast({ title: 'Sucesso', description: 'Documento excluído.' })
     fetchDocs()
   }
