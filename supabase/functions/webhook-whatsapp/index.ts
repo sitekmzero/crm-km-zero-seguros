@@ -65,6 +65,10 @@ Deno.serve(async (req: Request) => {
 
       const messageBody = message.text.body
 
+      // Normalize phone number (digits only)
+      const phoneRaw = phone || ''
+      const normalizedPhone = phoneRaw.replace(/\D/g, '')
+
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
@@ -73,15 +77,44 @@ Deno.serve(async (req: Request) => {
         .schema('public')
         .from('leads')
         .select('*')
-        .eq('phone', phone)
+        .eq('phone', normalizedPhone)
         .maybeSingle()
       if (fetchError) throw new Error(`Lead fetch error: ${fetchError.message}`)
+
+      // Fallback for Brazilian numbers (9-digit issue)
+      if (!lead && normalizedPhone.startsWith('55')) {
+        if (normalizedPhone.length === 12) {
+          const variant =
+            normalizedPhone.slice(0, 4) + '9' + normalizedPhone.slice(4)
+          const { data } = await supabase
+            .schema('public')
+            .from('leads')
+            .select('*')
+            .eq('phone', variant)
+            .maybeSingle()
+          lead = data
+        } else if (normalizedPhone.length === 13) {
+          const variant = normalizedPhone.slice(0, 4) + normalizedPhone.slice(5)
+          const { data } = await supabase
+            .schema('public')
+            .from('leads')
+            .select('*')
+            .eq('phone', variant)
+            .maybeSingle()
+          lead = data
+        }
+      }
 
       if (!lead) {
         const { data: newLead, error } = await supabase
           .schema('public')
           .from('leads')
-          .insert({ phone, name: contactName, status: 'novo', ai_active: true })
+          .insert({
+            phone: normalizedPhone,
+            name: contactName,
+            status: 'novo',
+            ai_active: true,
+          })
           .select('*')
           .single()
         if (error) throw new Error(`Lead insert error: ${error.message}`)
@@ -100,6 +133,12 @@ Deno.serve(async (req: Request) => {
           })
         if (insertMsgError)
           throw new Error(`Message insert error: ${insertMsgError.message}`)
+
+        await supabase
+          .schema('public')
+          .from('leads')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', lead.id)
 
         return new Response(
           JSON.stringify({
@@ -122,6 +161,13 @@ Deno.serve(async (req: Request) => {
         })
       if (insertMsgError)
         throw new Error(`Message insert error: ${insertMsgError.message}`)
+
+      // Atualiza o updated_at do lead para refletir a nova mensagem na listagem
+      await supabase
+        .schema('public')
+        .from('leads')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', lead.id)
 
       // 1. LIMITE DA JANELA DE HISTÓRICO
       const { data: historyData, error: historyError } = await supabase

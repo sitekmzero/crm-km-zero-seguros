@@ -30,7 +30,10 @@ export default function Atendimento() {
         { event: '*', schema: 'public', table: 'leads' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setLeads((prev) => [payload.new as Lead, ...prev])
+            setLeads((prev) => {
+              if (prev.some((l) => l.id === payload.new.id)) return prev
+              return [payload.new as Lead, ...prev]
+            })
           } else if (payload.eventType === 'UPDATE') {
             setLeads((prev) =>
               prev.map((l) =>
