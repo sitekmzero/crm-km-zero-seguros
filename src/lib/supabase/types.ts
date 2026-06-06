@@ -15,6 +15,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          priority: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          priority?: string
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       configs: {
         Row: {
           created_at: string
@@ -273,6 +306,15 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: app_notifications
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   title: text (not null)
+//   message: text (not null)
+//   type: text (not null, default: 'info'::text)
+//   priority: text (not null, default: 'normal'::text)
+//   read: boolean (not null, default: false)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: configs
 //   id: uuid (not null, default: gen_random_uuid())
 //   key: text (not null)
@@ -297,6 +339,9 @@ export const Constants = {
 //   feedback: text (nullable)
 
 // --- CONSTRAINTS ---
+// Table: app_notifications
+//   PRIMARY KEY app_notifications_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY app_notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: configs
 //   UNIQUE configs_key_key: UNIQUE (key)
 //   PRIMARY KEY configs_pkey: PRIMARY KEY (id)
@@ -309,6 +354,14 @@ export const Constants = {
 //   PRIMARY KEY messages_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: app_notifications
+//   Policy "Authenticated can insert notifications" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Users can update their own notifications" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can view their own notifications" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 // Table: configs
 //   Policy "anon_select_configs" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true

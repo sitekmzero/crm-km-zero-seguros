@@ -83,7 +83,6 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
   const fetchContacts = async () => {
     if (!user) return
     const { data, error } = await supabase
-      .schema('crm' as any)
       .from('contacts')
       .select('*')
       .order('created_at', { ascending: false })
@@ -102,17 +101,17 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
     fetchContacts()
 
     const channel = supabase
-      .channel('crm:contacts')
+      .channel('public:contacts')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'crm', table: 'contacts' },
+        { event: '*', schema: 'public', table: 'contacts' },
         () => {
           fetchContacts()
         },
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Realtime for crm.contacts subscribed successfully!')
+          console.log('Realtime for public.contacts subscribed successfully!')
         }
       })
 
@@ -122,23 +121,20 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
   }, [user])
 
   const addContact = async (data: Partial<Contact>) => {
-    const { error } = await supabase
-      .schema('crm' as any)
-      .from('contacts')
-      .insert({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        company_name: data.companyName,
-        status: data.status || 'subscriber',
-        cpf: data.cpf,
-        cep: data.cep,
-        produto_interesse: data.produto_interesse,
-        modelo_captura: data.modelo_captura,
-        observacoes: data.observacoes,
-        proprietario_id: user?.id,
-      })
+    const { error } = await supabase.from('contacts').insert({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      company_name: data.companyName,
+      status: data.status || 'subscriber',
+      cpf: data.cpf,
+      cep: data.cep,
+      produto_interesse: data.produto_interesse,
+      modelo_captura: data.modelo_captura,
+      observacoes: data.observacoes,
+      proprietario_id: user?.id,
+    })
     if (error) console.error(error)
   }
 
@@ -166,7 +162,6 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
       updateData.observacoes = data.observacoes
 
     const { error } = await supabase
-      .schema('crm' as any)
       .from('contacts')
       .update(updateData)
       .eq('id', id)
@@ -177,11 +172,7 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const deleteContact = async (id: string) => {
-    const { error } = await supabase
-      .schema('crm' as any)
-      .from('contacts')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('contacts').delete().eq('id', id)
     if (error) console.error(error)
   }
 
