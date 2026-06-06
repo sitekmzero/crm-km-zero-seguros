@@ -206,6 +206,41 @@ export type Database = {
           },
         ]
       }
+      quotations: {
+        Row: {
+          contact_id: string | null
+          dados_cotacao: Json
+          data_criacao: string
+          id: string
+          status: string
+          tipo_produto: string
+        }
+        Insert: {
+          contact_id?: string | null
+          dados_cotacao?: Json
+          data_criacao?: string
+          id?: string
+          status?: string
+          tipo_produto: string
+        }
+        Update: {
+          contact_id?: string | null
+          dados_cotacao?: Json
+          data_criacao?: string
+          id?: string
+          status?: string
+          tipo_produto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quotations_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -444,6 +479,13 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   is_draft: boolean (nullable, default: false)
 //   feedback: text (nullable)
+// Table: quotations
+//   id: uuid (not null, default: gen_random_uuid())
+//   contact_id: uuid (nullable)
+//   tipo_produto: text (not null)
+//   dados_cotacao: jsonb (not null, default: '{}'::jsonb)
+//   status: text (not null, default: 'pendente'::text)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: user_profiles
 //   id: uuid (not null)
 //   is_admin: boolean (nullable, default: false)
@@ -467,6 +509,9 @@ export const Constants = {
 //   CHECK messages_feedback_check: CHECK ((feedback = ANY (ARRAY['positive'::text, 'negative'::text])))
 //   FOREIGN KEY messages_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY messages_pkey: PRIMARY KEY (id)
+// Table: quotations
+//   FOREIGN KEY quotations_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+//   PRIMARY KEY quotations_pkey: PRIMARY KEY (id)
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
@@ -516,6 +561,10 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "authenticated_select_messages" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: quotations
+//   Policy "authenticated_all_quotations" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: user_profiles
 //   Policy "authenticated_read_profiles" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true

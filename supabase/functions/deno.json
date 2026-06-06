@@ -1,6 +1,6 @@
 {
   "_versions": {
-    "webhook-whatsapp": 20,
+    "webhook-whatsapp": 21,
     "send-whatsapp": 8,
     "gemini-chatbot": 5
   }

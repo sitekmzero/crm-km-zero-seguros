@@ -49,14 +49,20 @@ Deno.serve(async (req: Request) => {
       const value = changes?.value
       const messages = value?.messages
 
-      if (!messages || messages.length === 0) {
-        return new Response('No messages', { status: 200 })
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        console.log(
+          'Recebido payload de controle sem mensagens (ex: messaging_handovers ou statuses). Ignorando e respondendo 200 OK imediatamente.',
+        )
+        return new Response('OK', {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+        })
       }
 
       const message = messages[0]
       const phone = message.from
       const messageId = message.id
-      const contactName = value.contacts?.[0]?.profile?.name || phone
+      const contactName = value?.contacts?.[0]?.profile?.name || phone
 
       if (!phone) return new Response('Ignored', { status: 200 })
 
