@@ -47,17 +47,27 @@ export function ConversasView({
 
   // 3. CONSULTA INICIAL (SELECT) E 4. TRATAMENTO DO REALTIME NO FRONTEND
   useEffect(() => {
+    console.log('🟢 [CRM] Lead selecionado na tela:', selectedLeadId)
     if (!selectedLeadId) {
       setActiveMessages([])
       return
     }
 
     const fetchActiveMessages = async () => {
+      console.log(
+        "🟢 [CRM] Iniciando busca de histórico na tabela 'messages' para o lead ID:",
+        selectedLeadId,
+      )
       const { data, error } = await supabase
         .from('messages')
         .select('*')
         .eq('lead_id', selectedLeadId)
         .order('created_at', { ascending: true })
+
+      console.log('🟢 [CRM] Retorno do Supabase para mensagens:', {
+        data,
+        error,
+      })
 
       if (error) {
         console.error('Erro ao buscar mensagens do chat:', error)
@@ -68,6 +78,10 @@ export function ConversasView({
 
     fetchActiveMessages()
 
+    console.log(
+      "🟢 [CRM] Inscrevendo no Realtime de 'messages' para o lead ID:",
+      selectedLeadId,
+    )
     const channel = supabase
       .channel(`chat-lead-${selectedLeadId}`)
       .on(
@@ -115,7 +129,12 @@ export function ConversasView({
           )
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(
+          '🟢 [CRM] Status da inscrição Realtime de mensagens:',
+          status,
+        )
+      })
 
     return () => {
       supabase.removeChannel(channel)

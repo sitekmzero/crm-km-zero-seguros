@@ -21,6 +21,7 @@ export default function Atendimento() {
   const { toast } = useToast()
 
   useEffect(() => {
+    console.log('🟢 [CRM] Componente de Atendimento carregado com sucesso.')
     fetchInitialData()
 
     // Mantemos um listener global apenas para atualizar as últimas mensagens
@@ -86,7 +87,12 @@ export default function Atendimento() {
           })
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(
+          '🟢 [CRM] Status da inscrição Realtime global de mensagens:',
+          status,
+        )
+      })
 
     const leadsChannel = supabase
       .channel('leads-realtime')
@@ -130,7 +136,12 @@ export default function Atendimento() {
           setLeads((prev) => prev.filter((l) => l.id !== payload.old.id))
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(
+          '🟢 [CRM] Status da inscrição Realtime global de leads:',
+          status,
+        )
+      })
 
     return () => {
       supabase.removeChannel(messagesChannel)
