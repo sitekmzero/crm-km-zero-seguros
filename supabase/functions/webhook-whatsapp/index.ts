@@ -86,6 +86,7 @@ Deno.serve(async (req: Request) => {
         lead = newLead
       }
 
+      // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
         const { error: insertMsgError } = await supabase
           .from('messages')
@@ -116,12 +117,13 @@ Deno.serve(async (req: Request) => {
       if (insertMsgError)
         throw new Error(`Message insert error: ${insertMsgError.message}`)
 
+      // 1. LIMITE DA JANELA DE HISTÓRICO
       const { data: historyData, error: historyError } = await supabase
         .from('messages')
         .select('sender, content')
         .eq('lead_id', lead.id)
         .order('created_at', { ascending: false })
-        .limit(15)
+        .limit(8)
       if (historyError)
         throw new Error(`History fetch error: ${historyError.message}`)
 
@@ -148,17 +150,36 @@ Deno.serve(async (req: Request) => {
         parts: [{ text: m.content }],
       }))
 
+      // Checagem de horário comercial (UTC-3)
+      const now = new Date()
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000
+      const bsas = new Date(utc + 3600000 * -3) // UTC-3
+      const hour = bsas.getHours()
+      const day = bsas.getDay() // 0 = Sunday, 6 = Saturday
+      const isBusinessHours = day >= 1 && day <= 5 && hour >= 9 && hour < 18
+      const timeContext = isBusinessHours
+        ? 'Contexto do sistema: Estamos DENTRO do horário comercial (seg a sex, 09h às 18h).'
+        : "Contexto do sistema: Estamos FORA do horário comercial. Siga as regras de 'Fora do horário comercial'."
+
+      const fullPrompt = `${prompt}\n\n${timeContext}`
+
       const geminiKey = Deno.env.get('GEMINI_API_KEY')
       if (!geminiKey) throw new Error('GEMINI_API_KEY missing')
 
+      // ROTA DA API E MODELO (gemini-3.5-flash)
       const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: prompt }] },
+            systemInstruction: { parts: [{ text: fullPrompt }] },
             contents: geminiMessages,
+            // 2. CONFIGURAÇÃO DE PARAMETROS DE GERAÇÃO
+            generationConfig: {
+              maxOutputTokens: 150,
+              temperature: 0.7,
+            },
           }),
         },
       )
@@ -175,14 +196,24 @@ Deno.serve(async (req: Request) => {
       const statusRegex =
         /\[STATUS:\s*(seguro_qualificado|consorcio_qualificado|financiamento_qualificado|em_atendimento_humano|perdido)\]/gi
       let match
+      let triggeredStatus = null
+
       while ((match = statusRegex.exec(aiText)) !== null) {
         newStatus = match[1].toLowerCase() as any
-        if (newStatus === 'em_atendimento_humano') {
+        if (
+          [
+            'seguro_qualificado',
+            'consorcio_qualificado',
+            'financiamento_qualificado',
+            'em_atendimento_humano',
+          ].includes(newStatus)
+        ) {
           newAiActive = false
+          triggeredStatus = newStatus
         }
       }
 
-      let cleanText = aiText.replace(statusRegex, '').trim()
+      const cleanText = aiText.replace(statusRegex, '').trim()
 
       if (cleanText) {
         if (newStatus !== lead.status || newAiActive !== lead.ai_active) {
@@ -213,7 +244,6 @@ Deno.serve(async (req: Request) => {
           if (!waToken || !waPhoneId)
             throw new Error('WhatsApp API credentials missing')
 
-          // Trigger the send-whatsapp Edge Function to deliver the AI response
           const { error: invokeError } = await supabase.functions.invoke(
             'send-whatsapp',
             {
@@ -227,12 +257,77 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      // Roteamento inteligente para Gabriel ou Adriana no Handoff
+      if (triggeredStatus) {
+        try {
+          const summaryRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                systemInstruction: {
+                  parts: [
+                    {
+                      text: 'Você é um assistente de roteamento. Analise a conversa e extraia o responsável e um resumo. Regra: Gabriel atende \'Seguro Auto\' e \'Seguro Residencial\'. Adriana atende o resto (outros seguros, consórcios, financiamentos). Retorne APENAS um JSON válido no formato: {"responsavel": "Gabriel" ou "Adriana", "resumo": "..."}',
+                    },
+                  ],
+                },
+                contents: geminiMessages,
+                generationConfig: { temperature: 0.1 },
+              }),
+            },
+          )
+
+          if (summaryRes.ok) {
+            const summaryData = await summaryRes.json()
+            let summaryText =
+              summaryData.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
+            summaryText = summaryText
+              .replace(/```json/g, '')
+              .replace(/```/g, '')
+              .trim()
+            const parsedSummary = JSON.parse(summaryText)
+
+            const routingHuman = parsedSummary.responsavel || 'Adriana'
+            const routingSummary =
+              parsedSummary.resumo ||
+              'Novo lead qualificado/handoff. Verifique o CRM.'
+            const routingPhone =
+              routingHuman === 'Gabriel' ? '5534992000300' : '5534984080220'
+
+            const waToken = Deno.env.get('META_ACCESS_TOKEN')
+            const waPhoneId =
+              Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '1242285125625890'
+            if (waToken && waPhoneId) {
+              const messageToHuman = `*Novo Lead Roteado: ${contactName} (${phone})*\n\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
+              await fetch(
+                `https://graph.facebook.com/v17.0/${waPhoneId}/messages`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${waToken}`,
+                  },
+                  body: JSON.stringify({
+                    messaging_product: 'whatsapp',
+                    to: routingPhone,
+                    text: { body: messageToHuman },
+                  }),
+                },
+              )
+            }
+          }
+        } catch (err) {
+          console.error('Error generating/sending summary:', err)
+        }
+      }
+
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (e: any) {
       console.error(e)
-      // Return 200 instead of 400 so Meta does not continuously retry if we fail internally
       return new Response(JSON.stringify({ error: e.message }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

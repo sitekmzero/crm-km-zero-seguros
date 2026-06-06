@@ -73,6 +73,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          feedback: string | null
           id: string
           is_draft: boolean | null
           lead_id: string
@@ -81,6 +82,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          feedback?: string | null
           id?: string
           is_draft?: boolean | null
           lead_id: string
@@ -89,6 +91,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          feedback?: string | null
           id?: string
           is_draft?: boolean | null
           lead_id?: string
@@ -291,6 +294,7 @@ export const Constants = {
 //   content: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
 //   is_draft: boolean (nullable, default: false)
+//   feedback: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: configs
@@ -300,6 +304,7 @@ export const Constants = {
 //   UNIQUE leads_phone_key: UNIQUE (phone)
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 // Table: messages
+//   CHECK messages_feedback_check: CHECK ((feedback = ANY (ARRAY['positive'::text, 'negative'::text])))
 //   FOREIGN KEY messages_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY messages_pkey: PRIMARY KEY (id)
 
