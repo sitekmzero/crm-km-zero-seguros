@@ -5,7 +5,13 @@ import useContactsStore from '@/stores/useContactsStore'
 import { useToast } from '@/hooks/use-toast'
 import { JourneyModal } from './JourneyModal'
 import { supabase } from '@/lib/supabase/client'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Filter } from 'lucide-react'
 
 interface ContactsBoardProps {
@@ -103,7 +109,7 @@ export function ContactsBoard({
   }
 
   const filteredContacts = localContacts.filter(
-    (c) => channelFilter === 'todos' || c.channel === channelFilter
+    (c) => channelFilter === 'todos' || c.channel === channelFilter,
   )
 
   const handleDrop = async (status: ContactStatus) => {
@@ -163,6 +169,6 @@ export function ContactsBoard({
         onClose={() => setViewingContact(null)}
         contact={viewingContact}
       />
-    </>
+    </div>
   )
 }
