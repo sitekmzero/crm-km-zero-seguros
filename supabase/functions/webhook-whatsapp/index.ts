@@ -92,6 +92,11 @@ Deno.serve(async (req: Request) => {
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
 
+      // Detect channel based on some payload indicators or use default
+      let incomingChannel = 'whatsapp'
+      if (payload.object === 'instagram') incomingChannel = 'instagram'
+      if (payload.object === 'page') incomingChannel = 'facebook'
+
       let { data: lead, error: fetchError } = await supabase
         .schema('public')
         .from('leads')
@@ -134,6 +139,7 @@ Deno.serve(async (req: Request) => {
               name: contactName,
               status: 'novo',
               ai_active: true,
+              channel: incomingChannel,
             })
             .select('*')
             .single()

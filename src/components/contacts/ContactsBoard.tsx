@@ -5,6 +5,8 @@ import useContactsStore from '@/stores/useContactsStore'
 import { useToast } from '@/hooks/use-toast'
 import { JourneyModal } from './JourneyModal'
 import { supabase } from '@/lib/supabase/client'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Filter } from 'lucide-react'
 
 interface ContactsBoardProps {
   contacts: Contact[]
@@ -22,6 +24,7 @@ export function ContactsBoard({
   const [draggedContactId, setDraggedContactId] = useState<string | null>(null)
   const [viewingContact, setViewingContact] = useState<Contact | null>(null)
   const [localContacts, setLocalContacts] = useState<Contact[]>(initialContacts)
+  const [channelFilter, setChannelFilter] = useState<string>('todos')
 
   // Sincroniza o state local com as props iniciais (ex. ao carregar via fetch)
   useEffect(() => {
@@ -99,6 +102,10 @@ export function ContactsBoard({
     setDraggedContactId(id)
   }
 
+  const filteredContacts = localContacts.filter(
+    (c) => channelFilter === 'todos' || c.channel === channelFilter
+  )
+
   const handleDrop = async (status: ContactStatus) => {
     if (draggedContactId) {
       // Optimistic update para mover o cartão de coluna instantaneamente
@@ -118,14 +125,30 @@ export function ContactsBoard({
   }
 
   return (
-    <>
-      <div className="flex h-full w-full overflow-x-auto pb-4 items-stretch min-h-[600px] bg-background">
+    <div className="flex flex-col h-full space-y-4">
+      <div className="flex items-center justify-end px-2 print:hidden">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={channelFilter} onValueChange={setChannelFilter}>
+            <SelectTrigger className="w-[180px] h-9 bg-background">
+              <SelectValue placeholder="Filtrar por Canal" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os Canais</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
+              <SelectItem value="facebook">Facebook</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex flex-1 w-full overflow-x-auto pb-4 items-stretch min-h-[600px] bg-background rounded-md border border-border/50 p-2">
         {columns.map((col) => (
           <KanbanColumn
             key={col.id}
             id={col.id}
             title={col.title}
-            contacts={localContacts.filter((c) => c.status === col.id)}
+            contacts={filteredContacts.filter((c) => c.status === col.id)}
             onDrop={handleDrop}
             onDragStart={handleDragStart}
             onViewJourney={setViewingContact}

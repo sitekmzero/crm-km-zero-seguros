@@ -11,9 +11,24 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { MessageCircle, Settings, BarChart3 } from 'lucide-react'
+import {
+  MessageCircle,
+  Settings,
+  BarChart3,
+  Instagram,
+  Facebook,
+} from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Database } from '@/lib/supabase/types'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useState } from 'react'
+import { addDays, isAfter } from 'date-fns'
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
@@ -28,7 +43,15 @@ export function MetricasView({
   leads: Lead[]
   messages: Record<string, Message[]>
 }) {
-  const allMessages = Object.values(messages).flat()
+  const [period, setPeriod] = useState('30')
+
+  const filteredLeads = leads.filter((l) => {
+    const leadDate = new Date(l.created_at)
+    const minDate = addDays(new Date(), -parseInt(period))
+    return isAfter(leadDate, minDate)
+  })
+
+  const allMessages = filteredLeads.map((l) => messages[l.id] || []).flat()
   const iaCount = allMessages.filter((m) => m.sender === 'ia').length
   const humanoCount = allMessages.filter((m) => m.sender === 'humano').length
   const leadCount = allMessages.filter((m) => m.sender === 'lead').length
@@ -36,7 +59,7 @@ export function MetricasView({
   const iaResponseRate =
     outboundCount > 0 ? Math.round((iaCount / outboundCount) * 100) : 0
 
-  const statusCounts = leads.reduce(
+  const statusCounts = filteredLeads.reduce(
     (acc, lead) => {
       acc[lead.status] = (acc[lead.status] || 0) + 1
       return acc
@@ -49,7 +72,31 @@ export function MetricasView({
     count,
   }))
 
-  const engajados = leads
+  const channelQual = filteredLeads.reduce((acc: any, curr) => {
+    const ch = curr.channel || 'whatsapp'
+    if (!acc[ch]) acc[ch] = { total: 0, qualified: 0 }
+    acc[ch].total += 1
+    if (
+      [
+        'seguro_qualificado',
+        'consorcio_qualificado',
+        'financiamento_qualificado',
+      ].includes(curr.status)
+    ) {
+      acc[ch].qualified += 1
+    }
+    return acc
+  }, {})
+
+  const qualData = Object.entries(channelQual).map(
+    ([channel, metrics]: any) => ({
+      channel,
+      qualified: metrics.qualified,
+      unqualified: metrics.total - metrics.qualified,
+    }),
+  )
+
+  const engajados = filteredLeads
     .map((l) => ({
       ...l,
       msgCount: (messages[l.id] || []).length,
@@ -59,10 +106,22 @@ export function MetricasView({
 
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-muted/20 w-full h-full">
-      <div className="max-w-5xl mx-auto space-y-6 pb-20">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Dashboard de Métricas
-        </h2>
+      <div className="max-w-6xl mx-auto space-y-6 pb-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold tracking-tight">
+            Dashboard de Métricas
+          </h2>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px] bg-background">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
@@ -124,7 +183,7 @@ export function MetricasView({
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card className="col-span-1">
             <CardHeader>
               <CardTitle>Qualificação de Leads</CardTitle>
@@ -165,8 +224,71 @@ export function MetricasView({
 
           <Card className="col-span-1">
             <CardHeader>
+              <CardTitle>Taxa de Qualificação</CardTitle>
+              <CardDescription>
+                Qualificados por canal (Lead → Oportunidade)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ChartContainer
+                config={{
+                  qualified: {
+                    label: 'Qualificados',
+                    color: 'hsl(var(--primary))',
+                  },
+                  unqualified: {
+                    label: 'Não Qual.',
+                    color: 'hsl(var(--muted))',
+                  },
+                }}
+                className="h-full w-full"
+              >
+                <BarChart
+                  data={qualData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    dataKey="channel"
+                    type="category"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) =>
+                      val.charAt(0).toUpperCase() + val.slice(1)
+                    }
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar
+                    dataKey="qualified"
+                    stackId="a"
+                    fill="var(--color-qualified)"
+                    radius={[0, 0, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="unqualified"
+                    stackId="a"
+                    fill="var(--color-unqualified)"
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="col-span-1">
+            <CardHeader>
               <CardTitle>Contatos Mais Engajados</CardTitle>
-              <CardDescription>Top 5 leads com mais interações</CardDescription>
+              <CardDescription>
+                Top 5 leads com mais interações no período
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -176,16 +298,23 @@ export function MetricasView({
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
+                      <Avatar className="h-9 w-9 shrink-0">
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {lead.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="text-sm font-medium leading-none">
-                          {lead.name}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium leading-none truncate flex items-center gap-1.5">
+                          {lead.channel === 'instagram' ? (
+                            <Instagram className="h-3 w-3 text-fuchsia-500 shrink-0" />
+                          ) : lead.channel === 'facebook' ? (
+                            <Facebook className="h-3 w-3 text-blue-500 shrink-0" />
+                          ) : (
+                            <MessageCircle className="h-3 w-3 text-emerald-500 shrink-0" />
+                          )}
+                          <span className="truncate">{lead.name}</span>
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1 truncate">
                           {lead.phone}
                         </p>
                       </div>

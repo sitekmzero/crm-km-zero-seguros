@@ -7,6 +7,9 @@ import {
   CheckSquare,
   Clock,
   TrendingUp,
+  Instagram,
+  Facebook,
+  MessageCircle,
 } from 'lucide-react'
 import { Contact } from '@/stores/useContactsStore'
 import { cn } from '@/lib/utils'
@@ -53,6 +56,19 @@ export function KanbanCard({
       (contact.stageUpdatedAt?.getTime() || contact.createdAt.getTime())) /
       (1000 * 3600 * 24),
   )
+
+  const ChannelIcon =
+    contact.channel === 'instagram'
+      ? Instagram
+      : contact.channel === 'facebook'
+        ? Facebook
+        : MessageCircle
+  const channelColor =
+    contact.channel === 'instagram'
+      ? 'text-fuchsia-500'
+      : contact.channel === 'facebook'
+        ? 'text-blue-500'
+        : 'text-emerald-500'
 
   return (
     <div
@@ -131,32 +147,45 @@ export function KanbanCard({
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-1 mt-2 pt-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
-            onClick={() => onViewDetails?.(contact)}
-            title="Ver Detalhes"
-          >
-            <PanelRight className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-            onClick={() => onViewJourney?.(contact)}
-            title="Ver Jornada do Cliente"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            <Mail className="h-3.5 w-3.5" />
-          </Button>
+        <div className="flex items-center justify-between mt-2 pt-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center justify-center h-6 w-6 rounded-full bg-muted/50 cursor-default">
+                <ChannelIcon className={cn('h-3.5 w-3.5', channelColor)} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="capitalize">
+              {contact.channel || 'WhatsApp'}
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
+              onClick={() => onViewDetails?.(contact)}
+              title="Ver Detalhes"
+            >
+              <PanelRight className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              onClick={() => onViewJourney?.(contact)}
+              title="Ver Jornada do Cliente"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              <Mail className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

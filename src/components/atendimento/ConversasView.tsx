@@ -17,10 +17,37 @@ import {
   ThumbsUp,
   ThumbsDown,
   Trash2,
+  Instagram,
+  Facebook,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+
+const getChannelIcon = (channel?: string | null) => {
+  switch (channel) {
+    case 'instagram':
+      return <Instagram className="h-4 w-4 text-fuchsia-500" />
+    case 'facebook':
+      return <Facebook className="h-4 w-4 text-blue-500" />
+    case 'whatsapp':
+    default:
+      return <MessageSquare className="h-4 w-4 text-emerald-500" />
+  }
+}
+
+const getChannelLabel = (channel?: string | null) => {
+  switch (channel) {
+    case 'instagram':
+      return 'Atendimento via Instagram Direct'
+    case 'facebook':
+      return 'Atendimento via Facebook Messenger'
+    case 'whatsapp':
+    default:
+      return 'Atendimento via WhatsApp'
+  }
+}
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
@@ -291,9 +318,12 @@ export function ConversasView({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className="font-medium text-sm truncate pr-2 text-foreground">
-                        {lead.name}
-                      </h3>
+                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                        {getChannelIcon(lead.channel)}
+                        <h3 className="font-medium text-sm truncate text-foreground">
+                          {lead.name}
+                        </h3>
+                      </div>
                       {lastMsg && (
                         <span className="text-[10px] text-muted-foreground flex-shrink-0">
                           {new Date(lastMsg.created_at).toLocaleTimeString([], {
@@ -371,12 +401,19 @@ export function ConversasView({
                     />
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                   <Phone className="h-3 w-3" />
                   {selectedLead.phone}
                 </div>
               </div>
-              <div className="hidden sm:block mr-2">
+              <div className="hidden sm:flex flex-col gap-1 items-end mr-2">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1.5 font-normal bg-muted/50"
+                >
+                  {getChannelIcon(selectedLead.channel)}
+                  {getChannelLabel(selectedLead.channel)}
+                </Badge>
                 <StatusBadge
                   status={selectedLead.status}
                   aiActive={selectedLead.ai_active}

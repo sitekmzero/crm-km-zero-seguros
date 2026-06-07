@@ -35,6 +35,7 @@ export interface Contact {
   leadScore?: number
   probability?: number
   stageUpdatedAt?: Date
+  channel?: string
 }
 
 interface ContactsContextType {
@@ -74,6 +75,7 @@ const mapDbToContact = (row: any): Contact => ({
     : row.created_at
       ? new Date(row.created_at)
       : new Date(),
+  channel: row.channel || 'whatsapp',
 })
 
 export const ContactsProvider = ({ children }: { children: ReactNode }) => {
@@ -138,6 +140,7 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
         modelo_captura: data.modelo_captura,
         observacoes: data.observacoes,
         proprietario_id: user?.id,
+        channel: data.channel || 'whatsapp',
       })
     if (error) console.error(error)
   }
@@ -164,6 +167,7 @@ export const ContactsProvider = ({ children }: { children: ReactNode }) => {
       updateData.modelo_captura = data.modelo_captura
     if (data.observacoes !== undefined)
       updateData.observacoes = data.observacoes
+    if (data.channel !== undefined) updateData.channel = data.channel
 
     const { error } = await supabase
       .schema('public')

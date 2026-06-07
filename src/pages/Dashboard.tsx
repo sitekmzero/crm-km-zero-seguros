@@ -33,6 +33,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Instagram, Facebook, MessageCircle } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ export default function Dashboard() {
   })
   const [funnelData, setFunnelData] = useState<any[]>([])
   const [productData, setProductData] = useState<any[]>([])
+  const [channelData, setChannelData] = useState<any[]>([])
   const [ranking, setRanking] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
 
@@ -70,7 +72,7 @@ export default function Dashboard() {
 
     let query = supabase
       .from('contacts')
-      .select('status, created_at, produto_interesse, proprietario_id')
+      .select('status, created_at, produto_interesse, proprietario_id, channel')
       .gte('created_at', startDate.toISOString())
     if (!isAdmin) query = query.eq('proprietario_id', user?.id)
 
@@ -106,6 +108,31 @@ export default function Dashboard() {
       }, {})
       setProductData(
         Object.entries(prodCounts).map(([name, value]) => ({ name, value })),
+      )
+
+      const channelCounts = data.reduce((acc: any, curr) => {
+        const ch = curr.channel || 'whatsapp'
+        acc[ch] = (acc[ch] || 0) + 1
+        return acc
+      }, {})
+      setChannelData(
+        [
+          {
+            name: 'WhatsApp',
+            value: channelCounts['whatsapp'] || 0,
+            fill: '#10b981',
+          },
+          {
+            name: 'Instagram',
+            value: channelCounts['instagram'] || 0,
+            fill: '#d946ef',
+          },
+          {
+            name: 'Facebook',
+            value: channelCounts['facebook'] || 0,
+            fill: '#3b82f6',
+          },
+        ].filter((d) => d.value > 0),
       )
 
       if (isAdmin) {
@@ -230,7 +257,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <Card className="col-span-2 shadow-sm border-border">
           <CardHeader>
             <CardTitle>Funil de Vendas</CardTitle>
@@ -274,7 +301,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border">
+        <Card className="col-span-1 shadow-sm border-border">
           <CardHeader>
             <CardTitle>Por Produto</CardTitle>
           </CardHeader>
@@ -289,8 +316,8 @@ export default function Dashboard() {
                       data={productData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
+                      innerRadius={50}
+                      outerRadius={70}
                       paddingAngle={5}
                       dataKey="value"
                     >
@@ -306,6 +333,49 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartContainer>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-1 shadow-sm border-border">
+          <CardHeader>
+            <CardTitle>Por Canal</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[300px] flex flex-col items-center justify-center">
+            {channelData.length === 0 ? (
+              <p className="text-muted-foreground">Sem dados.</p>
+            ) : (
+              <ChartContainer config={{}} className="h-full w-full pb-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={channelData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {channelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            )}
+            <div className="flex flex-wrap justify-center gap-3 mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-3 w-3 text-emerald-500" /> WA
+              </div>
+              <div className="flex items-center gap-1">
+                <Instagram className="h-3 w-3 text-fuchsia-500" /> IG
+              </div>
+              <div className="flex items-center gap-1">
+                <Facebook className="h-3 w-3 text-blue-500" /> FB
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

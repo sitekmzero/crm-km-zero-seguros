@@ -75,6 +75,7 @@ export type Database = {
       contacts: {
         Row: {
           cep: string | null
+          channel: string | null
           company_name: string | null
           cpf: string | null
           created_at: string | null
@@ -96,6 +97,7 @@ export type Database = {
         }
         Insert: {
           cep?: string | null
+          channel?: string | null
           company_name?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -117,6 +119,7 @@ export type Database = {
         }
         Update: {
           cep?: string | null
+          channel?: string | null
           company_name?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -173,6 +176,7 @@ export type Database = {
       leads: {
         Row: {
           ai_active: boolean
+          channel: string | null
           created_at: string
           id: string
           name: string
@@ -182,6 +186,7 @@ export type Database = {
         }
         Insert: {
           ai_active?: boolean
+          channel?: string | null
           created_at?: string
           id?: string
           name: string
@@ -191,6 +196,7 @@ export type Database = {
         }
         Update: {
           ai_active?: boolean
+          channel?: string | null
           created_at?: string
           id?: string
           name?: string
