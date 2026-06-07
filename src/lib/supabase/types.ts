@@ -525,6 +525,7 @@ export const Constants = {
 //   last_activity_date: timestamp with time zone (nullable, default: now())
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   channel: text (nullable, default: 'whatsapp'::text)
 // Table: documents
 //   id: uuid (not null, default: gen_random_uuid())
 //   contact_id: uuid (nullable)
@@ -539,6 +540,7 @@ export const Constants = {
 //   ai_active: boolean (not null, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   channel: text (nullable, default: 'whatsapp'::text)
 // Table: messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)

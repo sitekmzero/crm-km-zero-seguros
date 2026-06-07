@@ -60,6 +60,7 @@ export default function Dashboard() {
   const [channelData, setChannelData] = useState<any[]>([])
   const [ranking, setRanking] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
+  const [goals, setGoals] = useState<any[]>([])
 
   useEffect(() => {
     if (user) fetchData()
@@ -110,29 +111,43 @@ export default function Dashboard() {
         Object.entries(prodCounts).map(([name, value]) => ({ name, value })),
       )
 
+      const { data: goalsData } = await supabase
+        .from('channel_goals')
+        .select('*')
+      if (goalsData) setGoals(goalsData)
+
       const channelCounts = data.reduce((acc: any, curr) => {
         const ch = curr.channel || 'whatsapp'
-        acc[ch] = (acc[ch] || 0) + 1
+        if (!acc[ch]) acc[ch] = { total: 0, qualified: 0 }
+        acc[ch].total += 1
+        if (
+          [
+            'seguro_qualificado',
+            'consorcio_qualificado',
+            'financiamento_qualificado',
+          ].includes(curr.status)
+        ) {
+          acc[ch].qualified += 1
+        }
         return acc
       }, {})
+
       setChannelData(
-        [
-          {
-            name: 'WhatsApp',
-            value: channelCounts['whatsapp'] || 0,
-            fill: '#10b981',
-          },
-          {
-            name: 'Instagram',
-            value: channelCounts['instagram'] || 0,
-            fill: '#d946ef',
-          },
-          {
-            name: 'Facebook',
-            value: channelCounts['facebook'] || 0,
-            fill: '#3b82f6',
-          },
-        ].filter((d) => d.value > 0),
+        Object.entries(channelCounts)
+          .map(([key, val]: any) => {
+            let fill = '#10b981'
+            if (key === 'instagram') fill = '#d946ef'
+            if (key === 'facebook') fill = '#3b82f6'
+            if (key === 'landing_page') fill = '#60a5fa'
+            if (key === 'webchat') fill = '#C8A24A'
+            return {
+              name: key,
+              value: val.total,
+              qualified: val.qualified,
+              fill,
+            }
+          })
+          .filter((d) => d.value > 0),
       )
 
       if (isAdmin) {
@@ -338,44 +353,53 @@ export default function Dashboard() {
 
         <Card className="col-span-1 shadow-sm border-border">
           <CardHeader>
-            <CardTitle>Por Canal</CardTitle>
+            <CardTitle>Metas por Canal (Qualificados)</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex flex-col items-center justify-center">
+          <CardContent className="h-[300px] overflow-y-auto pr-2">
             {channelData.length === 0 ? (
-              <p className="text-muted-foreground">Sem dados.</p>
+              <div className="h-full flex items-center justify-center">
+                <p className="text-muted-foreground">Sem dados.</p>
+              </div>
             ) : (
-              <ChartContainer config={{}} className="h-full w-full pb-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={channelData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {channelData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <div className="space-y-4 pt-2">
+                {channelData.map((ch, idx) => {
+                  const goal =
+                    goals.find((g) => g.channel === ch.name)?.target_count || 10
+                  const progress = Math.min(
+                    Math.round((ch.qualified / goal) * 100),
+                    100,
+                  )
+                  return (
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium flex items-center gap-1.5 capitalize">
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: ch.fill }}
+                          ></span>
+                          {ch.name.replace('_', ' ')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {ch.qualified} / {goal}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full transition-all"
+                          style={{
+                            width: `${progress}%`,
+                            backgroundColor: ch.fill,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="text-[10px] text-right text-muted-foreground">
+                        {ch.value} contatos totais
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
-            <div className="flex flex-wrap justify-center gap-3 mt-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-3 w-3 text-emerald-500" /> WA
-              </div>
-              <div className="flex items-center gap-1">
-                <Instagram className="h-3 w-3 text-fuchsia-500" /> IG
-              </div>
-              <div className="flex items-center gap-1">
-                <Facebook className="h-3 w-3 text-blue-500" /> FB
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

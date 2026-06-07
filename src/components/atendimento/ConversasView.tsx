@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { Globe } from 'lucide-react'
 
 const getChannelIcon = (channel?: string | null) => {
   switch (channel) {
@@ -31,6 +32,10 @@ const getChannelIcon = (channel?: string | null) => {
       return <Instagram className="h-4 w-4 text-fuchsia-500" />
     case 'facebook':
       return <Facebook className="h-4 w-4 text-blue-500" />
+    case 'landing_page':
+      return <Globe className="h-4 w-4 text-blue-400" />
+    case 'webchat':
+      return <MessageSquare className="h-4 w-4 text-[#C8A24A]" />
     case 'whatsapp':
     default:
       return <MessageSquare className="h-4 w-4 text-emerald-500" />
@@ -40,12 +45,16 @@ const getChannelIcon = (channel?: string | null) => {
 const getChannelLabel = (channel?: string | null) => {
   switch (channel) {
     case 'instagram':
-      return 'Atendimento via Instagram Direct'
+      return 'Instagram Direct'
     case 'facebook':
-      return 'Atendimento via Facebook Messenger'
+      return 'Facebook Messenger'
+    case 'landing_page':
+      return 'Landing Page'
+    case 'webchat':
+      return 'Widget Webchat'
     case 'whatsapp':
     default:
-      return 'Atendimento via WhatsApp'
+      return 'WhatsApp'
   }
 }
 
@@ -318,7 +327,13 @@ export function ConversasView({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                      <div className="flex items-center gap-1.5 min-w-0 pr-2 relative">
+                        {lead.channel === 'whatsapp' && (
+                          <span
+                            className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                            title="Prioridade WhatsApp"
+                          />
+                        )}
                         {getChannelIcon(lead.channel)}
                         <h3 className="font-medium text-sm truncate text-foreground">
                           {lead.name}
@@ -373,6 +388,10 @@ export function ConversasView({
       >
         {selectedLead ? (
           <>
+            <div className="w-full bg-muted/40 py-1.5 px-4 text-[11px] font-medium border-b text-muted-foreground flex justify-center items-center gap-2 uppercase tracking-wider shrink-0 z-10">
+              {getChannelIcon(selectedLead.channel)}
+              Atendimento iniciado via {getChannelLabel(selectedLead.channel)}
+            </div>
             <div className="h-16 border-b flex items-center px-4 bg-card shrink-0 gap-3 shadow-sm z-10">
               <Button
                 variant="ghost"
