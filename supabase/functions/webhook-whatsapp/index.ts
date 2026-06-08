@@ -281,8 +281,7 @@ Deno.serve(async (req: Request) => {
         return acc
       }, {})
 
-      const defaultPrompt =
-        'Você é a Dryka, assistente virtual da Km Zero Seguros, Consórcios e Financiamentos.'
+      const defaultPrompt = 'Você é a Dryka, assistente virtual da Km Zero.'
       const prompt = configMap['sdr_system_prompt'] || defaultPrompt
       const isLearningMode = configMap['learning_mode_active'] === 'true'
       const history = (historyData || []).reverse()
@@ -402,7 +401,7 @@ Deno.serve(async (req: Request) => {
               )
             } else {
               console.log(
-                `Disparando requisição POST para a Graph API da Meta (${lead.channel})...`,
+                `🟢 [DISPARO] Tentando responder via ${lead.channel} para o ID: ${lead.phone}...`,
               )
               const sendRes = await fetch(
                 `https://graph.facebook.com/v20.0/me/messages?access_token=${accessToken}`,
@@ -410,21 +409,24 @@ Deno.serve(async (req: Request) => {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    recipient: { id: lead.phone }, // Para FB/IG, o phone no banco armazena o sender.id
+                    recipient: { id: lead.phone },
                     message: { text: cleanText },
                   }),
                 },
               )
 
+              const responseData = await sendRes.json()
               if (!sendRes.ok) {
-                const errorData = await sendRes.text()
                 console.error(
-                  `[GRAPH_API_ERROR] Erro ao enviar mensagem via ${lead.channel}:`,
-                  errorData,
+                  `🔴 [DISPARO] Erro ao responder via ${lead.channel}:`,
+                  responseData,
+                )
+                throw new Error(
+                  `Erro na API da Meta: ${JSON.stringify(responseData)}`,
                 )
               } else {
                 console.log(
-                  `Mensagem enviada com sucesso para o cliente via ${lead.channel}.`,
+                  `🟢 [DISPARO] Resposta enviada com sucesso via ${lead.channel}!`,
                 )
 
                 // Grava a mensagem da IA no banco após envio bem-sucedido
