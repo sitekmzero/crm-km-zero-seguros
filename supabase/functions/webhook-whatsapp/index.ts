@@ -36,27 +36,44 @@ Deno.serve(async (req: Request) => {
 
   if (req.method === 'POST') {
     try {
-      console.log('Iniciando processamento da mensagem do WhatsApp...')
+      console.log('Iniciando processamento da mensagem do webhook...')
       const payload = await req.json()
       console.log('Incoming POST payload:', JSON.stringify(payload, null, 2))
 
-      if (payload.object === 'whatsapp_business_account') {
-        console.log('🟢 [WEBHOOK-META] Recebido payload do WhatsApp Cloud API')
-      } else if (payload.object === 'page') {
-        console.log(
-          '🟢 [WEBHOOK-META] Recebido payload do Facebook Messenger (Página)',
-        )
-      } else if (payload.object === 'instagram') {
-        console.log('🟢 [WEBHOOK-META] Recebido payload do Instagram Direct')
-      } else {
-        return new Response('Ignored', { status: 200 })
-      }
+      let incomingChannel = 'whatsapp'
+      let normalizedPhone = ''
+      let contactName = ''
+      let messageBody = ''
 
       if (payload.object === 'page' || payload.object === 'instagram') {
+        console.log(
+          `🟢 [WEBHOOK-META] Recebido payload do ${payload.object === 'page' ? 'Facebook Messenger' : 'Instagram Direct'}`,
+        )
         const messagingEvent = payload.entry?.[0]?.messaging?.[0]
         if (!messagingEvent?.message?.text) {
           console.log(
-            '🟢 [WEBHOOK-META] Evento recebido no Facebook/Instagram sem mensagem de texto. Ignorando e retornando 200 OK.',
+            '🟢 [WEBHOOK-META] Evento recebido sem mensagem de texto. Ignorando.',
+          )
+          return new Response('OK', {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+          })
+        }
+        normalizedPhone = messagingEvent.sender?.id
+        if (!normalizedPhone) return new Response('Ignored', { status: 200 })
+        messageBody = messagingEvent.message.text
+        incomingChannel = payload.object === 'page' ? 'facebook' : 'instagram'
+        contactName = `Cliente ${incomingChannel === 'facebook' ? 'Facebook' : 'Instagram'}`
+      } else if (payload.object === 'whatsapp_business_account') {
+        console.log('🟢 [WEBHOOK-META] Recebido payload do WhatsApp Cloud API')
+        const entry = payload.entry?.[0]
+        const changes = entry?.changes?.[0]
+        const value = changes?.value
+        const messages = value?.messages
+
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
+          console.log(
+            'Recebido payload de controle sem mensagens (ex: messaging_handovers). Ignorando.',
           )
           return new Response('OK', {
             status: 200,
@@ -64,125 +81,36 @@ Deno.serve(async (req: Request) => {
           })
         }
 
-        const senderId = messagingEvent.sender?.id
-        if (!senderId) return new Response('Ignored', { status: 200 })
-        const messageText = messagingEvent.message.text
-        const channel = payload.object === 'page' ? 'facebook' : 'instagram'
+        const message = messages[0]
+        const phone = message.from
+        if (!phone) return new Response('Ignored', { status: 200 })
 
-        console.log('Tentando conectar ao banco de dados Supabase...')
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        const supabase = createClient(supabaseUrl, supabaseKey)
-
-        let { data: lead, error: fetchError } = await supabase
-          .schema('public')
-          .from('leads')
-          .select('*')
-          .eq('phone', senderId)
-          .maybeSingle()
-        if (fetchError)
-          throw new Error(`Lead fetch error: ${fetchError.message}`)
-
-        if (!lead) {
-          const { data: newLead, error } = await supabase
-            .schema('public')
-            .from('leads')
-            .insert({
-              phone: senderId,
-              name: `Cliente ${channel === 'facebook' ? 'Facebook' : 'Instagram'}`,
-              channel: channel,
-              status: 'novo',
-              ai_active: true,
-            })
-            .select('*')
-            .single()
-          if (error) {
-            console.error('Failed database operation (Lead Insert):', error)
-            throw new Error(`Lead insert error: ${error.message}`)
-          }
-          lead = newLead
-        }
-
-        const { error: insertMsgError } = await supabase
-          .schema('public')
-          .from('messages')
-          .insert({
-            lead_id: lead.id,
-            content: messageText,
-            sender: 'lead',
-          })
-        if (insertMsgError) {
-          console.error(
-            'Failed database operation (Message Insert):',
-            insertMsgError,
+        if (message.type !== 'text') {
+          console.log(`Ignored unsupported message type: ${message.type}`)
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: 'Ignored non-text message',
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
           )
-          throw new Error(`Message insert error: ${insertMsgError.message}`)
         }
 
-        await supabase
-          .schema('public')
-          .from('leads')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', lead.id)
-
-        return new Response('OK', {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
-        })
+        messageBody = message.text.body
+        contactName = value?.contacts?.[0]?.profile?.name || 'Cliente WhatsApp'
+        normalizedPhone = (phone || '').replace(/\D/g, '')
+        incomingChannel = 'whatsapp'
+      } else {
+        return new Response('Ignored', { status: 200 })
       }
-
-      const entry = payload.entry?.[0]
-      const changes = entry?.changes?.[0]
-      const value = changes?.value
-      const messages = value?.messages
-
-      if (!messages || !Array.isArray(messages) || messages.length === 0) {
-        console.log(
-          'Recebido payload de controle sem mensagens (ex: messaging_handovers ou statuses). Ignorando e respondendo 200 OK imediatamente.',
-        )
-        return new Response('OK', {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
-        })
-      }
-
-      const message = messages[0]
-      const phone = message.from
-      const messageId = message.id
-      const contactName =
-        value?.contacts?.[0]?.profile?.name || 'Cliente WhatsApp'
-
-      if (!phone) return new Response('Ignored', { status: 200 })
-
-      if (message.type !== 'text') {
-        console.log(`Ignored unsupported message type: ${message.type}`)
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Ignored non-text message',
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
-        )
-      }
-
-      const messageBody = message.text.body
-
-      // Normalize phone number (digits only)
-      const phoneRaw = phone || ''
-      const normalizedPhone = phoneRaw.replace(/\D/g, '')
 
       console.log('Tentando conectar ao banco de dados Supabase...')
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
-
-      // Detect channel based on some payload indicators or use default
-      let incomingChannel = 'whatsapp'
-      if (payload.object === 'instagram') incomingChannel = 'instagram'
-      if (payload.object === 'page') incomingChannel = 'facebook'
 
       let { data: lead, error: fetchError } = await supabase
         .schema('public')
@@ -192,8 +120,12 @@ Deno.serve(async (req: Request) => {
         .maybeSingle()
       if (fetchError) throw new Error(`Lead fetch error: ${fetchError.message}`)
 
-      // Fallback for Brazilian numbers (9-digit issue)
-      if (!lead && normalizedPhone.startsWith('55')) {
+      // Fallback for Brazilian numbers (9-digit issue) - ONLY IF WHATSAPP
+      if (
+        incomingChannel === 'whatsapp' &&
+        !lead &&
+        normalizedPhone.startsWith('55')
+      ) {
         if (normalizedPhone.length === 12) {
           const variant =
             normalizedPhone.slice(0, 4) + '9' + normalizedPhone.slice(4)
@@ -251,8 +183,18 @@ Deno.serve(async (req: Request) => {
       }
 
       console.log(
-        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active}`,
+        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active} | Channel: ${lead.channel || incomingChannel}`,
       )
+
+      // Atualiza canal se estiver vazio
+      if (!lead.channel) {
+        await supabase
+          .schema('public')
+          .from('leads')
+          .update({ channel: incomingChannel })
+          .eq('id', lead.id)
+        lead.channel = incomingChannel
+      }
 
       // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
@@ -260,7 +202,7 @@ Deno.serve(async (req: Request) => {
           'IA inativa para este lead. Salvando mensagem do cliente no banco...',
         )
 
-        const { data, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .schema('public')
           .from('messages')
           .insert({
@@ -271,7 +213,7 @@ Deno.serve(async (req: Request) => {
 
         if (insertError) {
           console.error(
-            'Erro detalhado do Supabase ao gravar mensagem de lead inativo: ',
+            'Erro ao gravar mensagem de lead inativo: ',
             insertError,
           )
           throw new Error(`Falha na gravação do banco: ${insertError.message}`)
@@ -284,7 +226,7 @@ Deno.serve(async (req: Request) => {
           .eq('id', lead.id)
 
         console.log(
-          'Mensagem do cliente gravada com sucesso. Respondendo 200 OK para a Meta.',
+          'Mensagem do cliente gravada com sucesso. Respondendo 200 OK.',
         )
 
         return new Response('OK', {
@@ -309,7 +251,6 @@ Deno.serve(async (req: Request) => {
         throw new Error(`Message insert error: ${insertMsgError.message}`)
       }
 
-      // Atualiza o updated_at do lead para refletir a nova mensagem na listagem
       await supabase
         .schema('public')
         .from('leads')
@@ -341,7 +282,7 @@ Deno.serve(async (req: Request) => {
       }, {})
 
       const defaultPrompt =
-        'Você é um SDR virtual da KM Zero Seguros, Consórcios e Financiamentos.'
+        'Você é a Dryka, assistente virtual da Km Zero Seguros, Consórcios e Financiamentos.'
       const prompt = configMap['sdr_system_prompt'] || defaultPrompt
       const isLearningMode = configMap['learning_mode_active'] === 'true'
       const history = (historyData || []).reverse()
@@ -447,26 +388,83 @@ Deno.serve(async (req: Request) => {
             })
           if (draftError) console.error('[DRAFT_ERROR]', draftError)
         } else {
-          const waToken = Deno.env.get('META_ACCESS_TOKEN')
-          const waPhoneId =
-            Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
-          if (!waToken || !waPhoneId)
-            throw new Error('WhatsApp API credentials missing')
+          // DISPARO DE MENSAGEM COM BASE NO CANAL
+          if (lead.channel === 'facebook' || lead.channel === 'instagram') {
+            const tokenEnv =
+              lead.channel === 'facebook'
+                ? 'FACEBOOK_PAGE_ACCESS_TOKEN'
+                : 'INSTAGRAM_PAGE_ACCESS_TOKEN'
+            const accessToken = Deno.env.get(tokenEnv)
 
-          console.log('Disparando requisição POST para a Graph API da Meta...')
-          const { error: invokeError } = await supabase.functions.invoke(
-            'send-whatsapp',
-            {
-              body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
-            },
-          )
+            if (!accessToken) {
+              console.error(
+                `Erro de Integração: Variável de ambiente ${tokenEnv} não configurada.`,
+              )
+            } else {
+              console.log(
+                `Disparando requisição POST para a Graph API da Meta (${lead.channel})...`,
+              )
+              const sendRes = await fetch(
+                `https://graph.facebook.com/v20.0/me/messages?access_token=${accessToken}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    recipient: { id: lead.phone }, // Para FB/IG, o phone no banco armazena o sender.id
+                    message: { text: cleanText },
+                  }),
+                },
+              )
 
-          if (invokeError) {
-            console.error('[INVOKE_ERROR]', invokeError)
+              if (!sendRes.ok) {
+                const errorData = await sendRes.text()
+                console.error(
+                  `[GRAPH_API_ERROR] Erro ao enviar mensagem via ${lead.channel}:`,
+                  errorData,
+                )
+              } else {
+                console.log(
+                  `Mensagem enviada com sucesso para o cliente via ${lead.channel}.`,
+                )
+
+                // Grava a mensagem da IA no banco após envio bem-sucedido
+                const { error: iaMsgError } = await supabase
+                  .schema('public')
+                  .from('messages')
+                  .insert({
+                    lead_id: lead.id,
+                    sender: 'ia',
+                    content: cleanText,
+                    is_draft: false,
+                  })
+                if (iaMsgError) console.error('[IA_MSG_ERROR]', iaMsgError)
+              }
+            }
           } else {
+            // WHATSAPP API
+            const waToken = Deno.env.get('META_ACCESS_TOKEN')
+            const waPhoneId =
+              Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
+            if (!waToken || !waPhoneId)
+              throw new Error('WhatsApp API credentials missing')
+
             console.log(
-              'Mensagem enviada com sucesso para o cliente via Meta Cloud API.',
+              'Disparando requisição POST para a função send-whatsapp...',
             )
+            const { error: invokeError } = await supabase.functions.invoke(
+              'send-whatsapp',
+              {
+                body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
+              },
+            )
+
+            if (invokeError) {
+              console.error('[INVOKE_ERROR]', invokeError)
+            } else {
+              console.log(
+                'Mensagem enviada com sucesso para o cliente via WhatsApp.',
+              )
+            }
           }
         }
       }
@@ -514,7 +512,7 @@ Deno.serve(async (req: Request) => {
             const waPhoneId =
               Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
             if (waToken && waPhoneId) {
-              const messageToHuman = `*Novo Lead Roteado: ${contactName} (${phone})*\n\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
+              const messageToHuman = `*Novo Lead Roteado: ${contactName}*\n\n*Canal:* ${lead.channel || incomingChannel}\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
               console.log(
                 'Disparando requisição POST para a Graph API da Meta (Roteamento)...',
               )

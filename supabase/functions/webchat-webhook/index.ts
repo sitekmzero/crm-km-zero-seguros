@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
       .in('key', ['sdr_system_prompt'])
     const systemPrompt =
       configData?.find((c) => c.key === 'sdr_system_prompt')?.value ||
-      'Você é um assistente virtual da KM Zero Seguros.'
+      'Você é a Dryka, assistente virtual da Km Zero Seguros.'
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
     const response = await fetch(

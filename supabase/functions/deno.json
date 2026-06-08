@@ -1,10 +1,10 @@
 {
   "_versions": {
-    "webhook-whatsapp": 29,
+    "webhook-whatsapp": 30,
     "send-whatsapp": 12,
-    "gemini-chatbot": 9,
+    "gemini-chatbot": 10,
     "leads-capture": 1,
     "widget": 1,
-    "webchat-webhook": 1
+    "webchat-webhook": 2
   }
 }

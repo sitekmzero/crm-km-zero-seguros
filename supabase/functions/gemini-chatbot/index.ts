@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
 
     const systemPrompt =
       configMap['sdr_system_prompt'] ||
-      'Você é um assistente virtual da KM Zero Seguros.'
+      'Você é a Dryka, assistente virtual da Km Zero Seguros.'
     const isLearningMode = configMap['learning_mode_active'] === 'true'
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
