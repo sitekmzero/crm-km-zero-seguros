@@ -40,8 +40,95 @@ Deno.serve(async (req: Request) => {
       const payload = await req.json()
       console.log('Incoming POST payload:', JSON.stringify(payload, null, 2))
 
-      if (payload.object !== 'whatsapp_business_account') {
+      if (payload.object === 'whatsapp_business_account') {
+        console.log('🟢 [WEBHOOK-META] Recebido payload do WhatsApp Cloud API')
+      } else if (payload.object === 'page') {
+        console.log(
+          '🟢 [WEBHOOK-META] Recebido payload do Facebook Messenger (Página)',
+        )
+      } else if (payload.object === 'instagram') {
+        console.log('🟢 [WEBHOOK-META] Recebido payload do Instagram Direct')
+      } else {
         return new Response('Ignored', { status: 200 })
+      }
+
+      if (payload.object === 'page' || payload.object === 'instagram') {
+        const messagingEvent = payload.entry?.[0]?.messaging?.[0]
+        if (!messagingEvent?.message?.text) {
+          console.log(
+            '🟢 [WEBHOOK-META] Evento recebido no Facebook/Instagram sem mensagem de texto. Ignorando e retornando 200 OK.',
+          )
+          return new Response('OK', {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+          })
+        }
+
+        const senderId = messagingEvent.sender?.id
+        if (!senderId) return new Response('Ignored', { status: 200 })
+        const messageText = messagingEvent.message.text
+        const channel = payload.object === 'page' ? 'facebook' : 'instagram'
+
+        console.log('Tentando conectar ao banco de dados Supabase...')
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        let { data: lead, error: fetchError } = await supabase
+          .schema('public')
+          .from('leads')
+          .select('*')
+          .eq('phone', senderId)
+          .maybeSingle()
+        if (fetchError)
+          throw new Error(`Lead fetch error: ${fetchError.message}`)
+
+        if (!lead) {
+          const { data: newLead, error } = await supabase
+            .schema('public')
+            .from('leads')
+            .insert({
+              phone: senderId,
+              name: `Cliente ${channel === 'facebook' ? 'Facebook' : 'Instagram'}`,
+              channel: channel,
+              status: 'novo',
+              ai_active: true,
+            })
+            .select('*')
+            .single()
+          if (error) {
+            console.error('Failed database operation (Lead Insert):', error)
+            throw new Error(`Lead insert error: ${error.message}`)
+          }
+          lead = newLead
+        }
+
+        const { error: insertMsgError } = await supabase
+          .schema('public')
+          .from('messages')
+          .insert({
+            lead_id: lead.id,
+            content: messageText,
+            sender: 'lead',
+          })
+        if (insertMsgError) {
+          console.error(
+            'Failed database operation (Message Insert):',
+            insertMsgError,
+          )
+          throw new Error(`Message insert error: ${insertMsgError.message}`)
+        }
+
+        await supabase
+          .schema('public')
+          .from('leads')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', lead.id)
+
+        return new Response('OK', {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+        })
       }
 
       const entry = payload.entry?.[0]
