@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -45,6 +45,33 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      channel_goals: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          period: string
+          target_count: number
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          period?: string
+          target_count?: number
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          period?: string
+          target_count?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -165,11 +192,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'documents_contact_id_fkey'
-            columns: ['contact_id']
+            foreignKeyName: "documents_contact_id_fkey"
+            columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -181,7 +208,7 @@ export type Database = {
           id: string
           name: string
           phone: string
-          status: Database['public']['Enums']['lead_status']
+          status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
         }
         Insert: {
@@ -191,7 +218,7 @@ export type Database = {
           id?: string
           name: string
           phone: string
-          status?: Database['public']['Enums']['lead_status']
+          status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
         Update: {
@@ -201,7 +228,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string
-          status?: Database['public']['Enums']['lead_status']
+          status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
         Relationships: []
@@ -214,7 +241,7 @@ export type Database = {
           id: string
           is_draft: boolean | null
           lead_id: string
-          sender: Database['public']['Enums']['message_sender']
+          sender: Database["public"]["Enums"]["message_sender"]
         }
         Insert: {
           content: string
@@ -223,7 +250,7 @@ export type Database = {
           id?: string
           is_draft?: boolean | null
           lead_id: string
-          sender: Database['public']['Enums']['message_sender']
+          sender: Database["public"]["Enums"]["message_sender"]
         }
         Update: {
           content?: string
@@ -232,15 +259,15 @@ export type Database = {
           id?: string
           is_draft?: boolean | null
           lead_id?: string
-          sender?: Database['public']['Enums']['message_sender']
+          sender?: Database["public"]["Enums"]["message_sender"]
         }
         Relationships: [
           {
-            foreignKeyName: 'messages_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -271,11 +298,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'quotations_contact_id_fkey'
-            columns: ['contact_id']
+            foreignKeyName: "quotations_contact_id_fkey"
+            columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -333,13 +360,13 @@ export type Database = {
     }
     Enums: {
       lead_status:
-        | 'novo'
-        | 'seguro_qualificado'
-        | 'consorcio_qualificado'
-        | 'financiamento_qualificado'
-        | 'em_atendimento_humano'
-        | 'perdido'
-      message_sender: 'lead' | 'ia' | 'humano'
+        | "novo"
+        | "seguro_qualificado"
+        | "consorcio_qualificado"
+        | "financiamento_qualificado"
+        | "em_atendimento_humano"
+        | "perdido"
+      message_sender: "lead" | "ia" | "humano"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -347,33 +374,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -382,23 +409,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -407,23 +434,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -432,53 +459,54 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
       lead_status: [
-        'novo',
-        'seguro_qualificado',
-        'consorcio_qualificado',
-        'financiamento_qualificado',
-        'em_atendimento_humano',
-        'perdido',
+        "novo",
+        "seguro_qualificado",
+        "consorcio_qualificado",
+        "financiamento_qualificado",
+        "em_atendimento_humano",
+        "perdido",
       ],
-      message_sender: ['lead', 'ia', 'humano'],
+      message_sender: ["lead", "ia", "humano"],
     },
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -499,6 +527,13 @@ export const Constants = {
 //   priority: text (not null, default: 'normal'::text)
 //   read: boolean (not null, default: false)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: channel_goals
+//   id: uuid (not null, default: gen_random_uuid())
+//   channel: text (not null)
+//   target_count: integer (not null, default: 0)
+//   period: text (not null, default: 'monthly'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: configs
 //   id: uuid (not null, default: gen_random_uuid())
 //   key: text (not null)
@@ -572,6 +607,9 @@ export const Constants = {
 // Table: app_notifications
 //   PRIMARY KEY app_notifications_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY app_notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: channel_goals
+//   UNIQUE channel_goals_channel_key: UNIQUE (channel)
+//   PRIMARY KEY channel_goals_pkey: PRIMARY KEY (id)
 // Table: configs
 //   UNIQUE configs_key_key: UNIQUE (key)
 //   PRIMARY KEY configs_pkey: PRIMARY KEY (id)
@@ -608,6 +646,10 @@ export const Constants = {
 //   Policy "Users can view their own notifications" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
 //   Policy "authenticated_all_notifications" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: channel_goals
+//   Policy "authenticated_all_channel_goals" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: configs
@@ -669,7 +711,10 @@ export const Constants = {
 //     USING: true
 
 // --- INDEXES ---
+// Table: channel_goals
+//   CREATE UNIQUE INDEX channel_goals_channel_key ON public.channel_goals USING btree (channel)
 // Table: configs
 //   CREATE UNIQUE INDEX configs_key_key ON public.configs USING btree (key)
 // Table: leads
 //   CREATE UNIQUE INDEX leads_phone_key ON public.leads USING btree (phone)
+
