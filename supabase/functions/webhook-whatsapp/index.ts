@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { encodeBase64 } from 'jsr:@std/encoding/base64'
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,13 +22,6 @@ Deno.serve(async (req: Request) => {
     const challenge = url.searchParams.get('hub.challenge')
     const verifyToken = Deno.env.get('VERIFY_TOKEN') || 'km0_conexao_segura'
 
-    console.log('Handshake params:', {
-      mode,
-      token,
-      challenge,
-      expectedToken: verifyToken,
-    })
-
     if (mode === 'subscribe' && token === verifyToken) {
       return new Response(challenge, { status: 200 })
     }
@@ -38,33 +32,22 @@ Deno.serve(async (req: Request) => {
     try {
       console.log('Iniciando processamento da mensagem do webhook...')
       const payload = await req.json()
-      console.log('Incoming POST payload:', JSON.stringify(payload, null, 2))
 
       let incomingChannel = 'whatsapp'
       let normalizedPhone = ''
       let contactName = ''
       let messageBody = ''
+      let ocrUpdates: any = {}
 
       if (payload.object === 'page' || payload.object === 'instagram') {
-        console.log(
-          `🟢 [WEBHOOK-META] Recebido payload do ${payload.object === 'page' ? 'Facebook Messenger' : 'Instagram Direct'}`,
-        )
         const messagingEvent = payload.entry?.[0]?.messaging?.[0]
-
         if (messagingEvent?.read || messagingEvent?.delivery) {
-          console.log(
-            '🟢 [WEBHOOK-META] Recebido evento de leitura/entrega. Ignorando.',
-          )
           return new Response('OK', {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
           })
         }
-
         if (!messagingEvent?.message?.text) {
-          console.log(
-            '🟢 [WEBHOOK-META] Evento recebido sem mensagem de texto. Ignorando.',
-          )
           return new Response('OK', {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
@@ -113,14 +96,10 @@ Deno.serve(async (req: Request) => {
         payload.object === 'whatsapp_business_account' ||
         payload.object === 'whatsapp'
       ) {
-        console.log('🟢 [WEBHOOK-META] Recebido payload do WhatsApp Cloud API')
         const entry = payload.entry?.[0]
         const changes = entry?.changes?.[0]
         const value = changes?.value
         if (value?.statuses) {
-          console.log(
-            '🟢 [WEBHOOK-META] Recebido evento de status (delivered, read, etc). Ignorando.',
-          )
           return new Response('OK', {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
@@ -128,11 +107,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const messages = value?.messages
-
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
-          console.log(
-            'Recebido payload de controle sem mensagens (ex: messaging_handovers ou empty). Ignorando.',
-          )
           return new Response('OK', {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
@@ -143,12 +118,131 @@ Deno.serve(async (req: Request) => {
         const phone = message?.from
         if (!phone) return new Response('Ignored', { status: 200 })
 
-        if (message.type !== 'text') {
-          console.log(`Ignored unsupported message type: ${message.type}`)
+        normalizedPhone = (phone || '').replace(/\D/g, '')
+        incomingChannel = 'whatsapp'
+        contactName = value?.contacts?.[0]?.profile?.name || 'Cliente WhatsApp'
+
+        if (message.type === 'text') {
+          messageBody = message.text.body
+        } else if (message.type === 'image' || message.type === 'document') {
+          const mediaId = message[message.type]?.id
+          if (mediaId) {
+            console.log(
+              `🟢 [WEBHOOK-META] Recebido media_id: ${mediaId}, iniciando download...`,
+            )
+            const waToken = Deno.env.get('META_ACCESS_TOKEN')
+            if (waToken) {
+              try {
+                const mediaRes = await fetch(
+                  `https://graph.facebook.com/v20.0/${mediaId}`,
+                  {
+                    headers: { Authorization: `Bearer ${waToken}` },
+                  },
+                )
+                const mediaData = await mediaRes.json()
+                if (mediaData.url) {
+                  const fileRes = await fetch(mediaData.url, {
+                    headers: { Authorization: `Bearer ${waToken}` },
+                  })
+                  const blob = await fileRes.blob()
+                  const arrayBuffer = await blob.arrayBuffer()
+                  const buffer = new Uint8Array(arrayBuffer)
+
+                  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+                  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+                  const supabase = createClient(supabaseUrl, supabaseKey)
+
+                  const ext = message.type === 'image' ? 'jpg' : 'pdf'
+                  const fileName = `${Date.now()}_${mediaId}.${ext}`
+                  const { data: uploadData, error: uploadError } =
+                    await supabase.storage
+                      .from('chat_attachments')
+                      .upload(fileName, buffer, {
+                        contentType: blob.type,
+                        upsert: true,
+                      })
+
+                  if (!uploadError && uploadData) {
+                    const { data: publicUrlData } = supabase.storage
+                      .from('chat_attachments')
+                      .getPublicUrl(fileName)
+                    messageBody = `[Arquivo Recebido: ${publicUrlData.publicUrl}]`
+
+                    const geminiKey = Deno.env.get('GEMINI_API_KEY')
+                    if (geminiKey && blob.size < 4000000) {
+                      const base64Data = encodeBase64(buffer)
+                      const promptOcr = `Analise este documento. Se for uma CNH, retorne apenas o CPF (apenas os números). Se for um CRLV (documento de veículo), retorne apenas a placa e modelo do veículo no formato "Placa: XXX, Modelo: YYY". Se for uma Apólice de Seguro, retorne um booleano "true" para is_renewal e extraia o número da apólice na URL. O formato de resposta DEVE ser estritamente um JSON válido: {"cpf": "string", "vehicle_info": "string", "is_renewal": boolean, "previous_policy_url": "string"}. Não use markdown.`
+
+                      const ocrRes = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+                        {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            contents: [
+                              {
+                                parts: [
+                                  { text: promptOcr },
+                                  {
+                                    inlineData: {
+                                      mimeType: blob.type,
+                                      data: base64Data,
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                            generationConfig: { temperature: 0.1 },
+                          }),
+                        },
+                      )
+
+                      if (ocrRes.ok) {
+                        const ocrData = await ocrRes.json()
+                        let ocrText =
+                          ocrData.candidates?.[0]?.content?.parts?.[0]?.text ||
+                          '{}'
+                        ocrText = ocrText
+                          .replace(/```json/g, '')
+                          .replace(/```/g, '')
+                          .trim()
+                        try {
+                          const parsedOcr = JSON.parse(ocrText)
+                          if (parsedOcr.cpf) ocrUpdates.cpf = parsedOcr.cpf
+                          if (parsedOcr.vehicle_info)
+                            ocrUpdates.vehicle_info = parsedOcr.vehicle_info
+                          if (parsedOcr.is_renewal === true)
+                            ocrUpdates.is_renewal = true
+                          if (parsedOcr.previous_policy_url)
+                            ocrUpdates.previous_policy_url =
+                              parsedOcr.previous_policy_url
+                          console.log(
+                            '🟢 [OCR] Dados extraídos com sucesso:',
+                            ocrUpdates,
+                          )
+                        } catch (e) {
+                          console.error('Erro ao fazer parse do JSON do OCR', e)
+                        }
+                      }
+                    }
+                  } else {
+                    messageBody =
+                      '[Arquivo Recebido - Falha ao salvar no Storage]'
+                  }
+                }
+              } catch (err) {
+                console.error('Erro no processamento de mídia:', err)
+                messageBody = '[Arquivo Recebido - Erro no processamento]'
+              }
+            } else {
+              messageBody = '[Arquivo Recebido - Token não configurado]'
+            }
+          }
+        } else {
           return new Response(
             JSON.stringify({
               success: true,
-              message: 'Ignored non-text message',
+              message: 'Ignored unsupported message type',
             }),
             {
               status: 200,
@@ -156,11 +250,6 @@ Deno.serve(async (req: Request) => {
             },
           )
         }
-
-        messageBody = message.text.body
-        contactName = value?.contacts?.[0]?.profile?.name || 'Cliente WhatsApp'
-        normalizedPhone = (phone || '').replace(/\D/g, '')
-        incomingChannel = 'whatsapp'
       } else {
         return new Response('Ignored', { status: 200 })
       }
@@ -179,6 +268,7 @@ Deno.serve(async (req: Request) => {
             name: contactName || 'Cliente',
             channel: incomingChannel,
             updated_at: new Date().toISOString(),
+            ...ocrUpdates,
           },
           { onConflict: 'phone' },
         )
@@ -186,20 +276,10 @@ Deno.serve(async (req: Request) => {
         .single()
 
       if (upsertError || !lead) {
-        console.error('Failed database operation (Lead Upsert):', upsertError)
         throw new Error(`Lead upsert error: ${upsertError?.message}`)
       }
 
-      console.log(
-        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active} | Channel: ${lead.channel}`,
-      )
-
-      // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
-        console.log(
-          'IA inativa para este lead. Salvando mensagem do cliente no banco...',
-        )
-
         const { error: insertError } = await supabase
           .schema('public')
           .from('messages')
@@ -210,18 +290,8 @@ Deno.serve(async (req: Request) => {
             is_draft: false,
           })
 
-        if (insertError) {
-          console.error(
-            'Erro ao gravar mensagem de lead inativo: ',
-            insertError,
-          )
+        if (insertError)
           throw new Error(`Falha na gravação do banco: ${insertError.message}`)
-        }
-
-        console.log(
-          'Mensagem do cliente gravada com sucesso. Respondendo 200 OK.',
-        )
-
         return new Response('OK', {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
@@ -237,15 +307,9 @@ Deno.serve(async (req: Request) => {
           content: messageBody,
           is_draft: false,
         })
-      if (insertMsgError) {
-        console.error(
-          'Failed database operation (Message Insert):',
-          insertMsgError,
-        )
+      if (insertMsgError)
         throw new Error(`Message insert error: ${insertMsgError.message}`)
-      }
 
-      // 1. LIMITE DA JANELA DE HISTÓRICO
       const { data: historyData, error: historyError } = await supabase
         .schema('public')
         .from('messages')
@@ -256,13 +320,11 @@ Deno.serve(async (req: Request) => {
       if (historyError)
         throw new Error(`History fetch error: ${historyError.message}`)
 
-      const { data: configData, error: configError } = await supabase
+      const { data: configData } = await supabase
         .schema('public')
         .from('configs')
         .select('key, value')
         .in('key', ['sdr_system_prompt', 'learning_mode_active'])
-      if (configError)
-        throw new Error(`Config fetch error: ${configError.message}`)
 
       const configMap = (configData || []).reduce((acc: any, curr: any) => {
         acc[curr.key] = curr.value
@@ -299,7 +361,6 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
       const isLearningMode = configMap['learning_mode_active'] === 'true'
       const history = (historyData || []).reverse()
 
-      // FETCH SUCCESS PATTERNS (FEW-SHOT RAG)
       let productType = 'seguro'
       if (lead.status.includes('consorcio')) productType = 'consorcio'
       else if (lead.status.includes('financiamento'))
@@ -326,12 +387,11 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
         parts: [{ text: m.content }],
       }))
 
-      // Checagem de horário comercial (UTC-3)
       const now = new Date()
       const utc = now.getTime() + now.getTimezoneOffset() * 60000
-      const bsas = new Date(utc + 3600000 * -3) // UTC-3
+      const bsas = new Date(utc + 3600000 * -3)
       const hour = bsas.getHours()
-      const day = bsas.getDay() // 0 = Sunday, 6 = Saturday
+      const day = bsas.getDay()
       const isBusinessHours = day >= 1 && day <= 5 && hour >= 9 && hour < 18
       const timeContext = isBusinessHours
         ? 'Contexto do sistema: Estamos DENTRO do horário comercial (seg a sex, 09h às 18h).'
@@ -349,9 +409,6 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
       const geminiKey = Deno.env.get('GEMINI_API_KEY')
       if (!geminiKey) throw new Error('GEMINI_API_KEY missing')
 
-      console.log('Enviando histórico de conversas para o Gemini 3.5 Flash...')
-
-      // ROTA DA API E MODELO (gemini-3.5-flash)
       const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
         {
@@ -360,7 +417,6 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: fullPrompt }] },
             contents: geminiMessages,
-            // 2. CONFIGURAÇÃO DE PARAMETROS DE GERAÇÃO
             generationConfig: {
               maxOutputTokens: 150,
               temperature: 0.7,
@@ -374,8 +430,6 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
 
       const geminiData = await geminiRes.json()
       const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
-
-      console.log(`Resposta recebida do Gemini: ${aiText}`)
 
       let newStatus = lead.status
       let newAiActive = lead.ai_active
@@ -444,18 +498,13 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
         }
 
         if (isLearningMode) {
-          const { error: draftError } = await supabase
-            .schema('public')
-            .from('messages')
-            .insert({
-              lead_id: lead.id,
-              sender: 'ia',
-              content: cleanText,
-              is_draft: true,
-            })
-          if (draftError) console.error('[DRAFT_ERROR]', draftError)
+          await supabase.schema('public').from('messages').insert({
+            lead_id: lead.id,
+            sender: 'ia',
+            content: cleanText,
+            is_draft: true,
+          })
         } else {
-          // DISPARO DE MENSAGEM COM BASE NO CANAL
           if (lead.channel === 'facebook' || lead.channel === 'instagram') {
             const tokenEnv =
               lead.channel === 'facebook'
@@ -463,14 +512,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
                 : 'INSTAGRAM_PAGE_ACCESS_TOKEN'
             const accessToken = Deno.env.get(tokenEnv)
 
-            if (!accessToken) {
-              console.error(
-                `Erro de Integração: Variável de ambiente ${tokenEnv} não configurada.`,
-              )
-            } else {
-              console.log(
-                `🟢 [DISPARO] Tentando responder via ${lead.channel} para o ID: ${lead.phone}...`,
-              )
+            if (accessToken) {
               const sendRes = await fetch(
                 `https://graph.facebook.com/v20.0/me/messages?access_token=${accessToken}`,
                 {
@@ -483,69 +525,23 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
                 },
               )
 
-              if (!sendRes.ok) {
-                const responseData = await sendRes.json().catch(() => ({}))
-                console.error(
-                  `🔴 [DISPARO] Erro ao responder via ${lead.channel}:`,
-                  JSON.stringify(responseData),
-                )
-                throw new Error(
-                  `Erro na API da Meta: ${JSON.stringify(responseData)}`,
-                )
-              } else {
-                console.log(
-                  `🟢 [DISPARO] Resposta enviada com sucesso via ${lead.channel}!`,
-                )
-
-                // Grava a mensagem da IA no banco após envio bem-sucedido
-                const { error: iaMsgError } = await supabase
-                  .schema('public')
-                  .from('messages')
-                  .insert({
-                    lead_id: lead.id,
-                    sender: 'ia',
-                    content: cleanText,
-                    is_draft: false,
-                  })
-                if (iaMsgError) console.error('[IA_MSG_ERROR]', iaMsgError)
+              if (sendRes.ok) {
+                await supabase.schema('public').from('messages').insert({
+                  lead_id: lead.id,
+                  sender: 'ia',
+                  content: cleanText,
+                  is_draft: false,
+                })
               }
             }
           } else {
-            // WHATSAPP API
-            const waToken = Deno.env.get('META_ACCESS_TOKEN')
-            const waPhoneId =
-              Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
-            if (!waToken || !waPhoneId)
-              throw new Error('WhatsApp API credentials missing')
-
-            console.log(
-              `🟢 [DISPARO] Tentando responder via whatsapp para o ID: ${lead.phone}...`,
-            )
-            const { error: invokeError } = await supabase.functions.invoke(
-              'send-whatsapp',
-              {
-                body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
-              },
-            )
-
-            if (invokeError) {
-              console.error(
-                `🔴 [DISPARO] Erro ao responder via whatsapp:`,
-                JSON.stringify(invokeError),
-              )
-              throw new Error(
-                `Erro na invocação do send-whatsapp: ${invokeError.message}`,
-              )
-            } else {
-              console.log(
-                `🟢 [DISPARO] Resposta enviada com sucesso via whatsapp!`,
-              )
-            }
+            await supabase.functions.invoke('send-whatsapp', {
+              body: { lead_id: lead.id, content: cleanText, sender: 'ia' },
+            })
           }
         }
       }
 
-      // Roteamento inteligente para Gabriel ou Adriana no Handoff
       if (triggeredStatus) {
         try {
           const summaryRes = await fetch(
@@ -579,8 +575,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
 
             const routingHuman = parsedSummary.responsavel || 'Adriana'
             const routingSummary =
-              parsedSummary.resumo ||
-              'Novo lead qualificado/handoff. Verifique o CRM.'
+              parsedSummary.resumo || 'Novo lead qualificado/handoff.'
             const routingPhone =
               routingHuman === 'Gabriel' ? '5534992000300' : '5534984080220'
 
@@ -589,10 +584,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
               Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
             if (waToken && waPhoneId) {
               const messageToHuman = `*Novo Lead Roteado: ${contactName}*\n\n*Canal:* ${lead.channel || incomingChannel}\n*Responsável:* ${routingHuman}\n*Status:* ${triggeredStatus}\n\n*Resumo:*\n${routingSummary}`
-              console.log(
-                'Disparando requisição POST para a Graph API da Meta (Roteamento)...',
-              )
-              const routingRes = await fetch(
+              await fetch(
                 `https://graph.facebook.com/v17.0/${waPhoneId}/messages`,
                 {
                   method: 'POST',
@@ -607,18 +599,6 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
                   }),
                 },
               )
-
-              if (!routingRes.ok) {
-                const errorData = await routingRes.text()
-                console.error(
-                  'Erro ao enviar mensagem de roteamento:',
-                  errorData,
-                )
-              } else {
-                console.log(
-                  'Mensagem enviada com sucesso para o cliente via Meta Cloud API (Roteamento).',
-                )
-              }
             }
           }
         } catch (err) {

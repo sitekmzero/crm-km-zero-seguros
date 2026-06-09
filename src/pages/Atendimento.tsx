@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConversasView } from '@/components/atendimento/ConversasView'
 import { MetricasView } from '@/components/atendimento/MetricasView'
 import { ConfigView } from '@/components/atendimento/ConfigView'
+import { LeadDetailsSidebar } from '@/components/atendimento/LeadDetailsSidebar'
 
 type Lead = Database['public']['Tables']['leads']['Row']
 type Message = Database['public']['Tables']['messages']['Row'] & {
@@ -16,6 +17,8 @@ type Message = Database['public']['Tables']['messages']['Row'] & {
 export default function Atendimento() {
   const [activeTab, setActiveTab] = useState('conversas')
   const [leads, setLeads] = useState<Lead[]>([])
+  const [activeLeadId, setActiveLeadId] = useState<string | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [messages, setMessages] = useState<Record<string, Message[]>>({})
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -210,7 +213,30 @@ export default function Atendimento() {
 
       <div className="flex-1 overflow-hidden relative flex">
         {activeTab === 'conversas' && (
-          <ConversasView leads={leads} messages={messages} loading={loading} />
+          <>
+            <ConversasView
+              leads={leads}
+              messages={messages}
+              loading={loading}
+              activeLeadId={activeLeadId}
+              onSelectLead={(id: string) => {
+                setActiveLeadId(id)
+                setIsSidebarOpen(true)
+              }}
+            />
+            {activeLeadId && (
+              <LeadDetailsSidebar
+                lead={leads.find((l) => l.id === activeLeadId)!}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                onUpdate={(updated) => {
+                  setLeads((prev) =>
+                    prev.map((l) => (l.id === updated.id ? updated : l)),
+                  )
+                }}
+              />
+            )}
+          </>
         )}
         {activeTab === 'metricas' && (
           <MetricasView leads={leads} messages={messages} />
