@@ -203,36 +203,63 @@ export type Database = {
       leads: {
         Row: {
           ai_active: boolean
+          assigned_to: string | null
           channel: string | null
+          cpf: string | null
           created_at: string
+          desired_credit: number | null
           email: string | null
           id: string
+          internal_notes: string | null
+          is_renewal: boolean | null
           name: string
           phone: string
+          previous_policy_url: string | null
+          product_interest: string | null
           status: Database['public']['Enums']['lead_status']
+          target_installment: number | null
           updated_at: string
+          vehicle_info: string | null
         }
         Insert: {
           ai_active?: boolean
+          assigned_to?: string | null
           channel?: string | null
+          cpf?: string | null
           created_at?: string
+          desired_credit?: number | null
           email?: string | null
           id?: string
+          internal_notes?: string | null
+          is_renewal?: boolean | null
           name: string
           phone: string
+          previous_policy_url?: string | null
+          product_interest?: string | null
           status?: Database['public']['Enums']['lead_status']
+          target_installment?: number | null
           updated_at?: string
+          vehicle_info?: string | null
         }
         Update: {
           ai_active?: boolean
+          assigned_to?: string | null
           channel?: string | null
+          cpf?: string | null
           created_at?: string
+          desired_credit?: number | null
           email?: string | null
           id?: string
+          internal_notes?: string | null
+          is_renewal?: boolean | null
           name?: string
           phone?: string
+          previous_policy_url?: string | null
+          product_interest?: string | null
           status?: Database['public']['Enums']['lead_status']
+          target_installment?: number | null
           updated_at?: string
+          vehicle_info?: string | null
         }
         Relationships: []
       }
@@ -606,6 +633,15 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   channel: text (nullable, default: 'whatsapp'::text)
 //   email: text (nullable)
+//   cpf: text (nullable)
+//   product_interest: text (nullable)
+//   assigned_to: text (nullable)
+//   vehicle_info: text (nullable)
+//   is_renewal: boolean (nullable, default: false)
+//   previous_policy_url: text (nullable)
+//   desired_credit: numeric (nullable)
+//   target_installment: numeric (nullable)
+//   internal_notes: text (nullable)
 // Table: messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)

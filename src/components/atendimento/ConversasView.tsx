@@ -24,7 +24,8 @@ import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { Globe, Star } from 'lucide-react'
+import { Globe, Star, PanelRight } from 'lucide-react'
+import { LeadDetailsSidebar } from './LeadDetailsSidebar'
 import {
   Dialog,
   DialogContent,
@@ -93,6 +94,7 @@ export function ConversasView({
   loading,
 }: ConversasViewProps) {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [activeMessages, setActiveMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [search, setSearch] = useState('')
@@ -484,10 +486,10 @@ export function ConversasView({
                   aiActive={selectedLead.ai_active}
                 />
               </div>
-              <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-background shadow-sm">
+              <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-background shadow-sm ml-auto sm:ml-0">
                 <span
                   className={cn(
-                    'text-xs font-medium',
+                    'text-xs font-medium hidden sm:inline',
                     !selectedLead.ai_active
                       ? 'text-primary'
                       : 'text-muted-foreground',
@@ -527,9 +529,21 @@ export function ConversasView({
                   )}
                 >
                   <Bot className="w-3 h-3" />
-                  IA
+                  <span className="hidden sm:inline">IA</span>
                 </span>
               </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={cn(
+                  'ml-2 shrink-0 text-muted-foreground hover:text-foreground',
+                  isSidebarOpen && 'bg-secondary text-foreground',
+                )}
+                title="Ficha do Lead"
+              >
+                <PanelRight className="h-5 w-5" />
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
@@ -734,6 +748,17 @@ export function ConversasView({
           </div>
         )}
       </div>
+
+      {selectedLead && (
+        <LeadDetailsSidebar
+          lead={selectedLead}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onUpdate={() => {
+            // Updated via Realtime, no need for manual local update
+          }}
+        />
+      )}
 
       <Dialog open={isPatternModalOpen} onOpenChange={setIsPatternModalOpen}>
         <DialogContent className="sm:max-w-[500px]">

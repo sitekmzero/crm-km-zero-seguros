@@ -82,9 +82,16 @@ Deno.serve(async (req: Request) => {
       .from('configs')
       .select('key, value')
       .in('key', ['sdr_system_prompt'])
-    const systemPrompt =
+    let systemPrompt =
       configData?.find((c) => c.key === 'sdr_system_prompt')?.value ||
       'Você é a Dryka, assistente virtual da Km Zero Seguros.'
+
+    systemPrompt += `\n\nEXTRAÇÃO DE DADOS (Sempre que o cliente fornecer as informações abaixo, inclua a respectiva tag ao final da sua mensagem interna, ex: [EMAIL: teste@teste.com]):
+- [EMAIL: valor]
+- [CPF: valor]
+- [CREDITO: valor numerico]
+- [PARCELA: valor numerico]
+- [VEICULO: marca/modelo/ano]`
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
     const response = await fetch(
@@ -101,9 +108,34 @@ Deno.serve(async (req: Request) => {
     )
 
     const data = await response.json()
-    const botReply =
+    let botReply =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
       'Desculpe, não consegui processar sua solicitação no momento. Aguarde o atendimento humano.'
+
+    let updatesToLead: any = {}
+    const extractRegex = /\[(EMAIL|CPF|CREDITO|PARCELA|VEICULO):\s*(.*?)\]/gi
+    let match
+    while ((match = extractRegex.exec(botReply)) !== null) {
+      const key = match[1].toUpperCase()
+      const val = match[2].trim()
+      if (key === 'EMAIL') updatesToLead.email = val
+      if (key === 'CPF') updatesToLead.cpf = val
+      if (key === 'CREDITO') {
+        const num = val.replace(/\D/g, '')
+        if (num) updatesToLead.desired_credit = parseFloat(num)
+      }
+      if (key === 'PARCELA') {
+        const num = val.replace(/\D/g, '')
+        if (num) updatesToLead.target_installment = parseFloat(num)
+      }
+      if (key === 'VEICULO') updatesToLead.vehicle_info = val
+    }
+
+    botReply = botReply.replace(extractRegex, '').trim()
+
+    if (Object.keys(updatesToLead).length > 0) {
+      await supabase.from('leads').update(updatesToLead).eq('id', currentLeadId)
+    }
 
     await supabase.from('messages').insert({
       lead_id: currentLeadId,

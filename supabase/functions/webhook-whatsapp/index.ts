@@ -337,7 +337,14 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
         ? 'Contexto do sistema: Estamos DENTRO do horário comercial (seg a sex, 09h às 18h).'
         : "Contexto do sistema: Estamos FORA do horário comercial. Siga as regras de 'Fora do horário comercial'."
 
-      const fullPrompt = `${prompt}\n\n${timeContext}${fewShotInjection}`
+      const extraPrompt = `\n\nEXTRAÇÃO DE DADOS (Sempre que o cliente fornecer as informações abaixo, inclua a respectiva tag ao final da sua mensagem interna para o sistema registrar, ex: [EMAIL: teste@teste.com]):
+- [EMAIL: valor]
+- [CPF: valor]
+- [CREDITO: valor numerico]
+- [PARCELA: valor numerico]
+- [VEICULO: marca/modelo/ano]`
+
+      const fullPrompt = `${prompt}\n\n${timeContext}${fewShotInjection}${extraPrompt}`
 
       const geminiKey = Deno.env.get('GEMINI_API_KEY')
       if (!geminiKey) throw new Error('GEMINI_API_KEY missing')
@@ -377,6 +384,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
         /\[STATUS:\s*(seguro_qualificado|consorcio_qualificado|financiamento_qualificado|em_atendimento_humano|perdido)\]/gi
       let match
       let triggeredStatus = null
+      let updatesToLead: any = {}
 
       while ((match = statusRegex.exec(aiText)) !== null) {
         newStatus = match[1].toLowerCase() as any
@@ -393,10 +401,34 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
         }
       }
 
-      const cleanText = aiText.replace(statusRegex, '').trim()
+      const extractRegex = /\[(EMAIL|CPF|CREDITO|PARCELA|VEICULO):\s*(.*?)\]/gi
+      while ((match = extractRegex.exec(aiText)) !== null) {
+        const key = match[1].toUpperCase()
+        const val = match[2].trim()
+        if (key === 'EMAIL') updatesToLead.email = val
+        if (key === 'CPF') updatesToLead.cpf = val
+        if (key === 'CREDITO') {
+          const num = val.replace(/\D/g, '')
+          if (num) updatesToLead.desired_credit = parseFloat(num)
+        }
+        if (key === 'PARCELA') {
+          const num = val.replace(/\D/g, '')
+          if (num) updatesToLead.target_installment = parseFloat(num)
+        }
+        if (key === 'VEICULO') updatesToLead.vehicle_info = val
+      }
+
+      const cleanText = aiText
+        .replace(statusRegex, '')
+        .replace(extractRegex, '')
+        .trim()
 
       if (cleanText) {
-        if (newStatus !== lead.status || newAiActive !== lead.ai_active) {
+        if (
+          newStatus !== lead.status ||
+          newAiActive !== lead.ai_active ||
+          Object.keys(updatesToLead).length > 0
+        ) {
           const { error: updateError } = await supabase
             .schema('public')
             .from('leads')
@@ -404,6 +436,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
               status: newStatus,
               ai_active: newAiActive,
               updated_at: new Date().toISOString(),
+              ...updatesToLead,
             })
             .eq('id', lead.id)
           if (updateError)

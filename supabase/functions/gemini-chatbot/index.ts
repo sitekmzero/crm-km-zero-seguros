@@ -59,6 +59,13 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
 
     let systemPrompt = configMap['sdr_system_prompt'] || defaultPrompt
 
+    systemPrompt += `\n\nEXTRAÇÃO DE DADOS (Sempre que o cliente fornecer as informações abaixo, inclua a respectiva tag ao final da sua mensagem para registro no sistema, ex: [EMAIL: teste@teste.com]):
+- [EMAIL: valor]
+- [CPF: valor]
+- [CREDITO: valor numerico]
+- [PARCELA: valor numerico]
+- [VEICULO: marca/modelo/ano]`
+
     if (lead_id) {
       const { data: lead } = await supabase
         .schema('public')
@@ -110,11 +117,39 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
     )
 
     const data = await response.json()
-    const botReply =
+    let botReply =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
       'Desculpe, não consegui processar sua solicitação agora.'
 
+    let updatesToLead: any = {}
+    const extractRegex = /\[(EMAIL|CPF|CREDITO|PARCELA|VEICULO):\s*(.*?)\]/gi
+    let match
+    while ((match = extractRegex.exec(botReply)) !== null) {
+      const key = match[1].toUpperCase()
+      const val = match[2].trim()
+      if (key === 'EMAIL') updatesToLead.email = val
+      if (key === 'CPF') updatesToLead.cpf = val
+      if (key === 'CREDITO') {
+        const num = val.replace(/\D/g, '')
+        if (num) updatesToLead.desired_credit = parseFloat(num)
+      }
+      if (key === 'PARCELA') {
+        const num = val.replace(/\D/g, '')
+        if (num) updatesToLead.target_installment = parseFloat(num)
+      }
+      if (key === 'VEICULO') updatesToLead.vehicle_info = val
+    }
+
+    botReply = botReply.replace(extractRegex, '').trim()
+
     if (lead_id) {
+      if (Object.keys(updatesToLead).length > 0) {
+        await supabase
+          .schema('public')
+          .from('leads')
+          .update(updatesToLead)
+          .eq('id', lead_id)
+      }
       if (isLearningMode) {
         // Save as draft, human-in-the-loop will review
         await supabase.schema('public').from('messages').insert({
