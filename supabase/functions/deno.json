@@ -32,6 +32,7 @@
     "migrate-crm-schema": 1,
     "process-renewals": 1,
     "validate-captcha": 1,
-    "validate-password": 1
+    "validate-password": 1,
+    "lifecycle-campaigns": 1
   }
 }
