@@ -63,18 +63,25 @@ Deno.serve(async (req: Request) => {
     const waPhoneId =
       Deno.env.get('WHATSAPP_PHONE_NUMBER_ID') || '124285125625890'
     if (waToken && waPhoneId && lead?.phone) {
-      await fetch(`https://graph.facebook.com/v17.0/${waPhoneId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${waToken}`,
+      const waRes = await fetch(
+        `https://graph.facebook.com/v17.0/${waPhoneId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${waToken}`,
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: lead.phone,
+            text: { body: content },
+          }),
         },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: lead.phone,
-          text: { body: content },
-        }),
-      })
+      )
+      if (!waRes.ok) {
+        const errData = await waRes.json().catch(() => ({}))
+        throw new Error(`Meta API Error: ${JSON.stringify(errData)}`)
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

@@ -24,7 +24,24 @@ import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { Globe } from 'lucide-react'
+import { Globe, Star } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 const getChannelIcon = (channel?: string | null) => {
   switch (channel) {
@@ -80,6 +97,35 @@ export function ConversasView({
   const [inputText, setInputText] = useState('')
   const [search, setSearch] = useState('')
   const { toast } = useToast()
+
+  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false)
+  const [patternForm, setPatternForm] = useState({
+    productType: 'seguro',
+    objection: '',
+    successResponse: '',
+  })
+
+  const handleSavePattern = async () => {
+    if (!patternForm.objection.trim() || !patternForm.successResponse.trim()) {
+      toast({ title: 'Preencha todos os campos', variant: 'destructive' })
+      return
+    }
+    const { error } = await supabase.from('success_patterns' as any).insert({
+      product_type: patternForm.productType,
+      customer_objection: patternForm.objection,
+      successful_response: patternForm.successResponse,
+    })
+    if (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Exemplo salvo com sucesso!' })
+      setIsPatternModalOpen(false)
+    }
+  }
 
   // 3. CONSULTA INICIAL (SELECT) E 4. TRATAMENTO DO REALTIME NO FRONTEND
   useEffect(() => {
@@ -505,7 +551,7 @@ export function ConversasView({
                   >
                     <div
                       className={cn(
-                        'max-w-[85%] sm:max-w-[75%] rounded-2xl p-3 shadow-sm',
+                        'max-w-[85%] sm:max-w-[75%] rounded-2xl p-3 shadow-sm group',
                         isLead
                           ? 'bg-card text-foreground rounded-tl-sm border border-border'
                           : isIA
@@ -569,6 +615,32 @@ export function ConversasView({
 
                       <div className="flex items-center justify-between mt-1 pt-1">
                         <div className="flex items-center gap-1">
+                          {isHumano && (
+                            <button
+                              onClick={() => {
+                                let pType = 'seguro'
+                                if (selectedLead?.status.includes('consorcio'))
+                                  pType = 'consorcio'
+                                if (
+                                  selectedLead?.status.includes('financiamento')
+                                )
+                                  pType = 'financiamento'
+                                setPatternForm({
+                                  productType: pType,
+                                  objection: '',
+                                  successResponse: msg.content,
+                                })
+                                setIsPatternModalOpen(true)
+                              }}
+                              className="text-[10px] flex items-center gap-1 transition-colors opacity-0 group-hover:opacity-100 text-primary-foreground/70 hover:text-white mr-2"
+                              title="Salvar como Exemplo de Sucesso"
+                            >
+                              <Star className="h-3 w-3" />
+                              <span className="hidden sm:inline">
+                                Salvar Exemplo
+                              </span>
+                            </button>
+                          )}
                           {!msg.is_draft && isIA && (
                             <>
                               <button
@@ -662,6 +734,83 @@ export function ConversasView({
           </div>
         )}
       </div>
+
+      <Dialog open={isPatternModalOpen} onOpenChange={setIsPatternModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-[#C8A24A]" />
+              Salvar Padrão de Sucesso
+            </DialogTitle>
+            <DialogDescription>
+              Salve objeções e boas respostas para treinar a Inteligência
+              Artificial.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Tipo de Produto</Label>
+              <Select
+                value={patternForm.productType}
+                onValueChange={(val) =>
+                  setPatternForm((prev) => ({ ...prev, productType: val }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o produto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="seguro">Seguro</SelectItem>
+                  <SelectItem value="consorcio">Consórcio</SelectItem>
+                  <SelectItem value="financiamento">Financiamento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Dor ou Objeção do Cliente</Label>
+              <Textarea
+                placeholder="Ex: Cliente achou a parcela muito alta..."
+                value={patternForm.objection}
+                onChange={(e) =>
+                  setPatternForm((prev) => ({
+                    ...prev,
+                    objection: e.target.value,
+                  }))
+                }
+                className="h-20"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Resposta de Sucesso</Label>
+              <Textarea
+                placeholder="Ex: Entendo perfeitamente. Sabia que podemos ajustar a franquia para caber no seu bolso?"
+                value={patternForm.successResponse}
+                onChange={(e) =>
+                  setPatternForm((prev) => ({
+                    ...prev,
+                    successResponse: e.target.value,
+                  }))
+                }
+                className="h-32"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsPatternModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSavePattern}
+              className="bg-[#C8A24A] hover:bg-[#b38f3d] text-white"
+            >
+              Salvar Padrão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

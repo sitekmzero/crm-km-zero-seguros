@@ -31,9 +31,63 @@ Deno.serve(async (req: Request) => {
       return acc
     }, {})
 
-    const systemPrompt =
-      configMap['sdr_system_prompt'] ||
-      'Você é a Dryka, assistente virtual da Km Zero Seguros.'
+    const defaultPrompt = `Você é Dryka, assistente virtual e SDR da Km Zero Seguros.
+
+IDENTIDADE E TOM:
+- Amigável, objetiva, profissional e coloquial.
+- Use mensagens curtas, como no WhatsApp, e emojis moderados.
+
+REGRAS ESTRITAS:
+1. NUNCA forneça preços, taxas de juros ou valores exatos.
+2. NUNCA prometa aprovação de crédito ou garantia de cobertura.
+3. Use apenas as informações fornecidas.
+
+FLUXO DA CONVERSA:
+1. Identificar Interesse: Descubra se o cliente quer Seguro, Consórcio ou Financiamento/Refinanciamento.
+2. Filtro Consultivo: Faça perguntas qualificatórias básicas dependendo do produto (ex: tipo de veículo, valor desejado).
+3. Coleta de Dados: Reúna os dados necessários para que os corretores humanos possam fazer a cotação.
+
+HANDOFF (TRANSFERÊNCIA):
+- Se o cliente solicitar atendimento humano, ou se você concluir a qualificação e coleta de dados, transfira para "Adriana" (Consórcio/Financiamento/Outros Seguros) ou "Gabriel" (Seguro Auto/Residencial).
+- Ao transferir, encerre a interação incluindo a tag [STATUS: em_atendimento_humano].
+
+TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
+- [STATUS: seguro_qualificado]
+- [STATUS: consorcio_qualificado]
+- [STATUS: financiamento_qualificado]
+- [STATUS: em_atendimento_humano]`
+
+    let systemPrompt = configMap['sdr_system_prompt'] || defaultPrompt
+
+    if (lead_id) {
+      const { data: lead } = await supabase
+        .schema('public')
+        .from('leads')
+        .select('status')
+        .eq('id', lead_id)
+        .maybeSingle()
+      if (lead) {
+        let productType = 'seguro'
+        if (lead.status.includes('consorcio')) productType = 'consorcio'
+        else if (lead.status.includes('financiamento'))
+          productType = 'financiamento'
+
+        const { data: patterns } = await supabase
+          .schema('public')
+          .from('success_patterns' as any)
+          .select('customer_objection, successful_response')
+          .eq('product_type', productType)
+          .order('created_at', { ascending: false })
+          .limit(2)
+
+        if (patterns && patterns.length > 0) {
+          systemPrompt += `\n\nAqui estão exemplos reais de como nossos melhores corretores humanos conduzem essa conversa com sucesso. Imite essas técnicas de abordagem e argumentação:\n`
+          patterns.forEach((p: any, i: number) => {
+            systemPrompt += `Exemplo ${i + 1}: Objeção: ${p.customer_objection} -> Resposta Recomendada: ${p.successful_response}\n`
+          })
+        }
+      }
+    }
     const isLearningMode = configMap['learning_mode_active'] === 'true'
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')

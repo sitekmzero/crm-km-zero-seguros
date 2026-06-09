@@ -281,10 +281,57 @@ Deno.serve(async (req: Request) => {
         return acc
       }, {})
 
-      const defaultPrompt = 'Você é a Dryka, assistente virtual da Km Zero.'
+      const defaultPrompt = `Você é Dryka, assistente virtual e SDR da Km Zero Seguros.
+
+IDENTIDADE E TOM:
+- Amigável, objetiva, profissional e coloquial.
+- Use mensagens curtas, como no WhatsApp, e emojis moderados.
+
+REGRAS ESTRITAS:
+1. NUNCA forneça preços, taxas de juros ou valores exatos.
+2. NUNCA prometa aprovação de crédito ou garantia de cobertura.
+3. Use apenas as informações fornecidas.
+
+FLUXO DA CONVERSA:
+1. Identificar Interesse: Descubra se o cliente quer Seguro, Consórcio ou Financiamento/Refinanciamento.
+2. Filtro Consultivo: Faça perguntas qualificatórias básicas dependendo do produto (ex: tipo de veículo, valor desejado).
+3. Coleta de Dados: Reúna os dados necessários para que os corretores humanos possam fazer a cotação.
+
+HANDOFF (TRANSFERÊNCIA):
+- Se o cliente solicitar atendimento humano, ou se você concluir a qualificação e coleta de dados, transfira para "Adriana" (Consórcio/Financiamento/Outros Seguros) ou "Gabriel" (Seguro Auto/Residencial).
+- Ao transferir, encerre a interação incluindo a tag [STATUS: em_atendimento_humano].
+
+TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
+- [STATUS: seguro_qualificado]
+- [STATUS: consorcio_qualificado]
+- [STATUS: financiamento_qualificado]
+- [STATUS: em_atendimento_humano]`
+
       const prompt = configMap['sdr_system_prompt'] || defaultPrompt
       const isLearningMode = configMap['learning_mode_active'] === 'true'
       const history = (historyData || []).reverse()
+
+      // FETCH SUCCESS PATTERNS (FEW-SHOT RAG)
+      let productType = 'seguro'
+      if (lead.status.includes('consorcio')) productType = 'consorcio'
+      else if (lead.status.includes('financiamento'))
+        productType = 'financiamento'
+
+      const { data: patterns } = await supabase
+        .schema('public')
+        .from('success_patterns' as any)
+        .select('customer_objection, successful_response')
+        .eq('product_type', productType)
+        .order('created_at', { ascending: false })
+        .limit(2)
+
+      let fewShotInjection = ''
+      if (patterns && patterns.length > 0) {
+        fewShotInjection = `\n\nAqui estão exemplos reais de como nossos melhores corretores humanos conduzem essa conversa com sucesso. Imite essas técnicas de abordagem e argumentação:\n`
+        patterns.forEach((p: any, i: number) => {
+          fewShotInjection += `Exemplo ${i + 1}: Objeção: ${p.customer_objection} -> Resposta Recomendada: ${p.successful_response}\n`
+        })
+      }
 
       const geminiMessages = history.map((m: any) => ({
         role: m.sender === 'lead' ? 'user' : 'model',
@@ -302,7 +349,7 @@ Deno.serve(async (req: Request) => {
         ? 'Contexto do sistema: Estamos DENTRO do horário comercial (seg a sex, 09h às 18h).'
         : "Contexto do sistema: Estamos FORA do horário comercial. Siga as regras de 'Fora do horário comercial'."
 
-      const fullPrompt = `${prompt}\n\n${timeContext}`
+      const fullPrompt = `${prompt}\n\n${timeContext}${fewShotInjection}`
 
       const geminiKey = Deno.env.get('GEMINI_API_KEY')
       if (!geminiKey) throw new Error('GEMINI_API_KEY missing')
@@ -415,11 +462,11 @@ Deno.serve(async (req: Request) => {
                 },
               )
 
-              const responseData = await sendRes.json()
               if (!sendRes.ok) {
+                const responseData = await sendRes.json().catch(() => ({}))
                 console.error(
                   `🔴 [DISPARO] Erro ao responder via ${lead.channel}:`,
-                  responseData,
+                  JSON.stringify(responseData),
                 )
                 throw new Error(
                   `Erro na API da Meta: ${JSON.stringify(responseData)}`,
@@ -451,7 +498,7 @@ Deno.serve(async (req: Request) => {
               throw new Error('WhatsApp API credentials missing')
 
             console.log(
-              'Disparando requisição POST para a função send-whatsapp...',
+              `🟢 [DISPARO] Tentando responder via whatsapp para o ID: ${lead.phone}...`,
             )
             const { error: invokeError } = await supabase.functions.invoke(
               'send-whatsapp',
@@ -461,10 +508,16 @@ Deno.serve(async (req: Request) => {
             )
 
             if (invokeError) {
-              console.error('[INVOKE_ERROR]', invokeError)
+              console.error(
+                `🔴 [DISPARO] Erro ao responder via whatsapp:`,
+                JSON.stringify(invokeError),
+              )
+              throw new Error(
+                `Erro na invocação do send-whatsapp: ${invokeError.message}`,
+              )
             } else {
               console.log(
-                'Mensagem enviada com sucesso para o cliente via WhatsApp.',
+                `🟢 [DISPARO] Resposta enviada com sucesso via whatsapp!`,
               )
             }
           }
