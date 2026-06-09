@@ -74,8 +74,45 @@ Deno.serve(async (req: Request) => {
         if (!normalizedPhone) return new Response('Ignored', { status: 200 })
         messageBody = messagingEvent.message.text
         incomingChannel = payload.object === 'page' ? 'facebook' : 'instagram'
-        contactName = `Cliente ${incomingChannel === 'facebook' ? 'Facebook' : 'Instagram'}`
-      } else if (payload.object === 'whatsapp_business_account') {
+
+        try {
+          if (incomingChannel === 'facebook') {
+            const fbToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN')
+            if (fbToken) {
+              const res = await fetch(
+                `https://graph.facebook.com/v20.0/${normalizedPhone}?fields=first_name,last_name,profile_pic&access_token=${fbToken}`,
+              )
+              if (res.ok) {
+                const data = await res.json()
+                contactName = [data.first_name, data.last_name]
+                  .filter(Boolean)
+                  .join(' ')
+                  .trim()
+              }
+            }
+          } else {
+            const igToken = Deno.env.get('INSTAGRAM_PAGE_ACCESS_TOKEN')
+            if (igToken) {
+              const res = await fetch(
+                `https://graph.facebook.com/v20.0/${normalizedPhone}?fields=name,username,profile_pic&access_token=${igToken}`,
+              )
+              if (res.ok) {
+                const data = await res.json()
+                contactName = data.name || data.username || ''
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Profile fetch error:', e)
+        }
+
+        if (!contactName) {
+          contactName = `Cliente ${incomingChannel === 'facebook' ? 'Facebook' : 'Instagram'}`
+        }
+      } else if (
+        payload.object === 'whatsapp_business_account' ||
+        payload.object === 'whatsapp'
+      ) {
         console.log('🟢 [WEBHOOK-META] Recebido payload do WhatsApp Cloud API')
         const entry = payload.entry?.[0]
         const changes = entry?.changes?.[0]

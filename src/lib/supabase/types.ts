@@ -205,6 +205,7 @@ export type Database = {
           ai_active: boolean
           channel: string | null
           created_at: string
+          email: string | null
           id: string
           name: string
           phone: string
@@ -215,6 +216,7 @@ export type Database = {
           ai_active?: boolean
           channel?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name: string
           phone: string
@@ -225,6 +227,7 @@ export type Database = {
           ai_active?: boolean
           channel?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
           phone?: string
@@ -602,6 +605,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   channel: text (nullable, default: 'whatsapp'::text)
+//   email: text (nullable)
 // Table: messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
