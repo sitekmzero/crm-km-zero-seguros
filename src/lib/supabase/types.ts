@@ -200,6 +200,38 @@ export type Database = {
           },
         ]
       }
+      google_conversions: {
+        Row: {
+          converted_at: string
+          gclid: string
+          id: string
+          lead_id: string | null
+          status: string
+        }
+        Insert: {
+          converted_at?: string
+          gclid: string
+          id?: string
+          lead_id?: string | null
+          status?: string
+        }
+        Update: {
+          converted_at?: string
+          gclid?: string
+          id?: string
+          lead_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'google_conversions_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       leads: {
         Row: {
           ai_active: boolean
@@ -209,6 +241,7 @@ export type Database = {
           created_at: string
           desired_credit: number | null
           email: string | null
+          gclid: string | null
           id: string
           internal_notes: string | null
           is_renewal: boolean | null
@@ -229,6 +262,7 @@ export type Database = {
           created_at?: string
           desired_credit?: number | null
           email?: string | null
+          gclid?: string | null
           id?: string
           internal_notes?: string | null
           is_renewal?: boolean | null
@@ -249,6 +283,7 @@ export type Database = {
           created_at?: string
           desired_credit?: number | null
           email?: string | null
+          gclid?: string | null
           id?: string
           internal_notes?: string | null
           is_renewal?: boolean | null
@@ -623,6 +658,12 @@ export const Constants = {
 //   file_name: text (not null)
 //   file_path: text (not null)
 //   uploaded_at: timestamp with time zone (not null, default: now())
+// Table: google_conversions
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (nullable)
+//   gclid: text (not null)
+//   converted_at: timestamp with time zone (not null, default: now())
+//   status: text (not null, default: 'pending'::text)
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -642,6 +683,7 @@ export const Constants = {
 //   desired_credit: numeric (nullable)
 //   target_installment: numeric (nullable)
 //   internal_notes: text (nullable)
+//   gclid: text (nullable)
 // Table: messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
@@ -692,6 +734,9 @@ export const Constants = {
 // Table: documents
 //   FOREIGN KEY documents_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   PRIMARY KEY documents_pkey: PRIMARY KEY (id)
+// Table: google_conversions
+//   FOREIGN KEY google_conversions_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+//   PRIMARY KEY google_conversions_pkey: PRIMARY KEY (id)
 // Table: leads
 //   UNIQUE leads_phone_key: UNIQUE (phone)
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
@@ -742,6 +787,10 @@ export const Constants = {
 //   Policy "authenticated_all_documents" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: google_conversions
+//   Policy "authenticated_all_google_conversions" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: leads
 //   Policy "anon_insert_leads" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -789,6 +838,43 @@ export const Constants = {
 // Table: user_profiles
 //   Policy "authenticated_read_profiles" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+
+// --- DATABASE FUNCTIONS ---
+// FUNCTION handle_lead_status_change()
+//   CREATE OR REPLACE FUNCTION public.handle_lead_status_change()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     edge_function_url text;
+//     request_body json;
+//   BEGIN
+//     IF NEW.status IN ('seguro_qualificado', 'consorcio_qualificado', 'financiamento_qualificado') AND OLD.status = 'novo' THEN
+//       edge_function_url := 'https://rlxvvykuouuppatrbrwo.supabase.co/functions/v1/offline-conversions';
+//
+//       request_body := json_build_object(
+//         'type', 'UPDATE',
+//         'table', 'leads',
+//         'schema', 'public',
+//         'record', row_to_json(NEW),
+//         'old_record', row_to_json(OLD)
+//       );
+//
+//       PERFORM net.http_post(
+//         url := edge_function_url,
+//         headers := jsonb_build_object('Content-Type', 'application/json'),
+//         body := request_body::jsonb
+//       );
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: leads
+//   on_lead_status_changed: CREATE TRIGGER on_lead_status_changed AFTER UPDATE ON public.leads FOR EACH ROW EXECUTE FUNCTION handle_lead_status_change()
 
 // --- INDEXES ---
 // Table: channel_goals

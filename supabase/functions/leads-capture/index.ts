@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'POST') {
     try {
       const body = await req.json()
-      const { name, phone, email, product } = body
+      const { name, phone, email, product_interest, product } = body
 
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL')!,
@@ -25,30 +25,33 @@ Deno.serve(async (req: Request) => {
 
       if (!normalizedPhone) throw new Error('Phone is required')
 
-      let { data: lead } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('phone', normalizedPhone)
-        .maybeSingle()
+      const leadName = name || 'Cliente Landing Page'
+      const prodInterest = product_interest || product || 'N/D'
 
-      if (!lead) {
-        const { data: newLead, error } = await supabase
-          .from('leads')
-          .insert({
+      const { data: lead, error: upsertError } = await supabase
+        .from('leads')
+        .upsert(
+          {
             phone: normalizedPhone,
-            name: name || 'Cliente Landing Page',
+            name: leadName,
+            email: email || null,
+            product_interest: prodInterest,
             channel: 'landing_page',
             status: 'novo',
             ai_active: true,
-          })
-          .select('*')
-          .single()
-        if (error) throw error
-        lead = newLead
-      }
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'phone' },
+        )
+        .select('*')
+        .single()
 
-      const productName = product || 'N/D'
-      const msgContent = `Lead se cadastrou via Landing Page de ${productName}${email ? `. Email: ${email}` : ''}`
+      if (upsertError || !lead)
+        throw new Error(`Lead upsert error: ${upsertError?.message}`)
+
+      console.log(`Lead captured and saved for: ${normalizedPhone}`)
+
+      const msgContent = `Lead se cadastrou via Landing Page de ${prodInterest}${email ? `. Email: ${email}` : ''}`
 
       await supabase.from('messages').insert({
         lead_id: lead.id,
@@ -57,10 +60,60 @@ Deno.serve(async (req: Request) => {
         is_draft: false,
       })
 
-      await supabase
-        .from('leads')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', lead.id)
+      const waToken = Deno.env.get('META_ACCESS_TOKEN')
+      const waPhoneId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+
+      if (waToken && waPhoneId) {
+        try {
+          const waRes = await fetch(
+            `https://graph.facebook.com/v20.0/${waPhoneId}/messages`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${waToken}`,
+              },
+              body: JSON.stringify({
+                messaging_product: 'whatsapp',
+                to: normalizedPhone,
+                type: 'template',
+                template: {
+                  name: 'kmzero_boas_vindas_sdr',
+                  language: {
+                    code: 'pt_BR',
+                  },
+                  components: [
+                    {
+                      type: 'body',
+                      parameters: [
+                        {
+                          type: 'text',
+                          text: leadName,
+                        },
+                        {
+                          type: 'text',
+                          text: prodInterest,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              }),
+            },
+          )
+
+          if (!waRes.ok) {
+            const errText = await waRes.text()
+            console.log('WhatsApp template send error:', errText)
+          } else {
+            console.log(
+              `WhatsApp welcome message sent via Meta API for: ${normalizedPhone}`,
+            )
+          }
+        } catch (waErr) {
+          console.log('Error during WhatsApp dispatch:', waErr)
+        }
+      }
 
       return new Response(JSON.stringify({ success: true, lead }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
