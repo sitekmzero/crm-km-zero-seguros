@@ -236,7 +236,9 @@ export type Database = {
         Row: {
           ai_active: boolean
           assigned_to: string | null
+          birth_date: string | null
           channel: string | null
+          closed_won_at: string | null
           cpf: string | null
           created_at: string
           desired_credit: number | null
@@ -245,8 +247,10 @@ export type Database = {
           id: string
           internal_notes: string | null
           is_renewal: boolean | null
+          last_campaign_sent_at: string | null
           name: string
           phone: string
+          policy_expires_at: string | null
           previous_policy_url: string | null
           product_interest: string | null
           status: Database['public']['Enums']['lead_status']
@@ -257,7 +261,9 @@ export type Database = {
         Insert: {
           ai_active?: boolean
           assigned_to?: string | null
+          birth_date?: string | null
           channel?: string | null
+          closed_won_at?: string | null
           cpf?: string | null
           created_at?: string
           desired_credit?: number | null
@@ -266,8 +272,10 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_renewal?: boolean | null
+          last_campaign_sent_at?: string | null
           name: string
           phone: string
+          policy_expires_at?: string | null
           previous_policy_url?: string | null
           product_interest?: string | null
           status?: Database['public']['Enums']['lead_status']
@@ -278,7 +286,9 @@ export type Database = {
         Update: {
           ai_active?: boolean
           assigned_to?: string | null
+          birth_date?: string | null
           channel?: string | null
+          closed_won_at?: string | null
           cpf?: string | null
           created_at?: string
           desired_credit?: number | null
@@ -287,8 +297,10 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_renewal?: boolean | null
+          last_campaign_sent_at?: string | null
           name?: string
           phone?: string
+          policy_expires_at?: string | null
           previous_policy_url?: string | null
           product_interest?: string | null
           status?: Database['public']['Enums']['lead_status']
@@ -684,6 +696,10 @@ export const Constants = {
 //   target_installment: numeric (nullable)
 //   internal_notes: text (nullable)
 //   gclid: text (nullable)
+//   birth_date: date (nullable)
+//   policy_expires_at: date (nullable)
+//   closed_won_at: timestamp with time zone (nullable)
+//   last_campaign_sent_at: timestamp with time zone (nullable)
 // Table: messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)

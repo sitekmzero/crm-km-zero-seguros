@@ -1,13 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { encodeBase64 } from 'jsr:@std/encoding/base64'
-
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS')
@@ -179,10 +173,13 @@ Deno.serve(async (req: Request) => {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
+                            systemInstruction: {
+                              parts: [{ text: promptOcr }],
+                            },
                             contents: [
                               {
+                                role: 'user',
                                 parts: [
-                                  { text: promptOcr },
                                   {
                                     inlineData: {
                                       mimeType: blob.type,
@@ -418,7 +415,7 @@ TAGS DE STATUS OBRIGATÓRIAS (no final da mensagem, use apenas UMA):
             systemInstruction: { parts: [{ text: fullPrompt }] },
             contents: geminiMessages,
             generationConfig: {
-              maxOutputTokens: 150,
+              maxOutputTokens: 200,
               temperature: 0.7,
             },
           }),
