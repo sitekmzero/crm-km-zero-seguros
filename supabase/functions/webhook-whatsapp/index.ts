@@ -161,12 +161,30 @@ Deno.serve(async (req: Request) => {
               channel: incomingChannel,
             })
             .select('*')
-            .single()
+            .maybeSingle()
+
           if (error) {
-            console.error('Failed database operation (Lead Insert):', error)
-            throw new Error(`Lead insert error: ${error.message}`)
+            if (error.code === '23505') {
+              const { data: existingLead, error: fetchAgainError } =
+                await supabase
+                  .schema('public')
+                  .from('leads')
+                  .select('*')
+                  .eq('phone', normalizedPhone)
+                  .maybeSingle()
+              if (fetchAgainError || !existingLead) {
+                throw new Error(
+                  `Lead fetch after unique violation error: ${fetchAgainError?.message}`,
+                )
+              }
+              lead = existingLead
+            } else {
+              console.error('Failed database operation (Lead Insert):', error)
+              throw new Error(`Lead insert error: ${error.message}`)
+            }
+          } else {
+            lead = newLead
           }
-          lead = newLead
         } catch (e: any) {
           console.error('Error creating lead:', e)
           return new Response(
@@ -209,6 +227,7 @@ Deno.serve(async (req: Request) => {
             lead_id: lead.id,
             sender: 'lead',
             content: messageBody,
+            is_draft: false,
           })
 
         if (insertError) {
@@ -242,6 +261,7 @@ Deno.serve(async (req: Request) => {
           lead_id: lead.id,
           sender: 'lead',
           content: messageBody,
+          is_draft: false,
         })
       if (insertMsgError) {
         console.error(
