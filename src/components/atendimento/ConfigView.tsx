@@ -43,10 +43,13 @@ export function ConfigView() {
 
   const handleSave = async () => {
     setLoading(true)
-    const { error } = await supabase.from('configs').upsert([
-      { key: 'sdr_system_prompt', value: prompt },
-      { key: 'learning_mode_active', value: learningMode ? 'true' : 'false' },
-    ])
+    const { error } = await supabase.from('configs').upsert(
+      [
+        { key: 'sdr_system_prompt', value: prompt },
+        { key: 'learning_mode_active', value: learningMode ? 'true' : 'false' },
+      ],
+      { onConflict: 'key' },
+    )
 
     if (error) {
       toast({

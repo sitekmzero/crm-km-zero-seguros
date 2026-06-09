@@ -306,6 +306,33 @@ export type Database = {
           },
         ]
       }
+      success_patterns: {
+        Row: {
+          created_at: string
+          customer_objection: string
+          id: string
+          metadata: Json | null
+          product_type: string
+          successful_response: string
+        }
+        Insert: {
+          created_at?: string
+          customer_objection: string
+          id?: string
+          metadata?: Json | null
+          product_type: string
+          successful_response: string
+        }
+        Update: {
+          created_at?: string
+          customer_objection?: string
+          id?: string
+          metadata?: Json | null
+          product_type?: string
+          successful_response?: string
+        }
+        Relationships: []
+      }
       training_progress: {
         Row: {
           created_at: string
@@ -590,6 +617,13 @@ export const Constants = {
 //   dados_cotacao: jsonb (not null, default: '{}'::jsonb)
 //   status: text (not null, default: 'pendente'::text)
 //   data_criacao: timestamp with time zone (not null, default: now())
+// Table: success_patterns
+//   id: uuid (not null, default: gen_random_uuid())
+//   product_type: text (not null)
+//   customer_objection: text (not null)
+//   successful_response: text (not null)
+//   metadata: jsonb (nullable, default: '{}'::jsonb)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: training_progress
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -628,6 +662,9 @@ export const Constants = {
 // Table: quotations
 //   FOREIGN KEY quotations_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
 //   PRIMARY KEY quotations_pkey: PRIMARY KEY (id)
+// Table: success_patterns
+//   PRIMARY KEY success_patterns_pkey: PRIMARY KEY (id)
+//   CHECK success_patterns_product_type_check: CHECK ((product_type = ANY (ARRAY['seguro'::text, 'consorcio'::text, 'financiamento'::text])))
 // Table: training_progress
 //   PRIMARY KEY training_progress_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY training_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -693,6 +730,10 @@ export const Constants = {
 //     USING: true
 // Table: quotations
 //   Policy "authenticated_all_quotations" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: success_patterns
+//   Policy "authenticated_all_success_patterns" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: training_progress
