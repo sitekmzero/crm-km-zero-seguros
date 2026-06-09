@@ -50,6 +50,17 @@ Deno.serve(async (req: Request) => {
           `🟢 [WEBHOOK-META] Recebido payload do ${payload.object === 'page' ? 'Facebook Messenger' : 'Instagram Direct'}`,
         )
         const messagingEvent = payload.entry?.[0]?.messaging?.[0]
+
+        if (messagingEvent?.read || messagingEvent?.delivery) {
+          console.log(
+            '🟢 [WEBHOOK-META] Recebido evento de leitura/entrega. Ignorando.',
+          )
+          return new Response('OK', {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+          })
+        }
+
         if (!messagingEvent?.message?.text) {
           console.log(
             '🟢 [WEBHOOK-META] Evento recebido sem mensagem de texto. Ignorando.',
@@ -69,11 +80,21 @@ Deno.serve(async (req: Request) => {
         const entry = payload.entry?.[0]
         const changes = entry?.changes?.[0]
         const value = changes?.value
+        if (value?.statuses) {
+          console.log(
+            '🟢 [WEBHOOK-META] Recebido evento de status (delivered, read, etc). Ignorando.',
+          )
+          return new Response('OK', {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' },
+          })
+        }
+
         const messages = value?.messages
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
           console.log(
-            'Recebido payload de controle sem mensagens (ex: messaging_handovers). Ignorando.',
+            'Recebido payload de controle sem mensagens (ex: messaging_handovers ou empty). Ignorando.',
           )
           return new Response('OK', {
             status: 200,
@@ -82,7 +103,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const message = messages[0]
-        const phone = message.from
+        const phone = message?.from
         if (!phone) return new Response('Ignored', { status: 200 })
 
         if (message.type !== 'text') {
@@ -112,107 +133,29 @@ Deno.serve(async (req: Request) => {
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
 
-      let { data: lead, error: fetchError } = await supabase
+      const { data: lead, error: upsertError } = await supabase
         .schema('public')
         .from('leads')
+        .upsert(
+          {
+            phone: normalizedPhone,
+            name: contactName || 'Cliente',
+            channel: incomingChannel,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'phone' },
+        )
         .select('*')
-        .eq('phone', normalizedPhone)
-        .maybeSingle()
-      if (fetchError) throw new Error(`Lead fetch error: ${fetchError.message}`)
+        .single()
 
-      // Fallback for Brazilian numbers (9-digit issue) - ONLY IF WHATSAPP
-      if (
-        incomingChannel === 'whatsapp' &&
-        !lead &&
-        normalizedPhone.startsWith('55')
-      ) {
-        if (normalizedPhone.length === 12) {
-          const variant =
-            normalizedPhone.slice(0, 4) + '9' + normalizedPhone.slice(4)
-          const { data } = await supabase
-            .schema('public')
-            .from('leads')
-            .select('*')
-            .eq('phone', variant)
-            .maybeSingle()
-          lead = data
-        } else if (normalizedPhone.length === 13) {
-          const variant = normalizedPhone.slice(0, 4) + normalizedPhone.slice(5)
-          const { data } = await supabase
-            .schema('public')
-            .from('leads')
-            .select('*')
-            .eq('phone', variant)
-            .maybeSingle()
-          lead = data
-        }
-      }
-
-      if (!lead) {
-        try {
-          const { data: newLead, error } = await supabase
-            .schema('public')
-            .from('leads')
-            .insert({
-              phone: normalizedPhone,
-              name: contactName,
-              status: 'novo',
-              ai_active: true,
-              channel: incomingChannel,
-            })
-            .select('*')
-            .maybeSingle()
-
-          if (error) {
-            if (error.code === '23505') {
-              const { data: existingLead, error: fetchAgainError } =
-                await supabase
-                  .schema('public')
-                  .from('leads')
-                  .select('*')
-                  .eq('phone', normalizedPhone)
-                  .maybeSingle()
-              if (fetchAgainError || !existingLead) {
-                throw new Error(
-                  `Lead fetch after unique violation error: ${fetchAgainError?.message}`,
-                )
-              }
-              lead = existingLead
-            } else {
-              console.error('Failed database operation (Lead Insert):', error)
-              throw new Error(`Lead insert error: ${error.message}`)
-            }
-          } else {
-            lead = newLead
-          }
-        } catch (e: any) {
-          console.error('Error creating lead:', e)
-          return new Response(
-            JSON.stringify({
-              success: false,
-              message: 'Failed to create lead',
-            }),
-            {
-              status: 200,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          )
-        }
+      if (upsertError || !lead) {
+        console.error('Failed database operation (Lead Upsert):', upsertError)
+        throw new Error(`Lead upsert error: ${upsertError?.message}`)
       }
 
       console.log(
-        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active} | Channel: ${lead.channel || incomingChannel}`,
+        `Lead consultado/criado com sucesso. Status: ${lead.status} | IA Ativa: ${lead.ai_active} | Channel: ${lead.channel}`,
       )
-
-      // Atualiza canal se estiver vazio
-      if (!lead.channel) {
-        await supabase
-          .schema('public')
-          .from('leads')
-          .update({ channel: incomingChannel })
-          .eq('id', lead.id)
-        lead.channel = incomingChannel
-      }
 
       // 3. REGRA DE SILENCIAMENTO
       if (!lead.ai_active) {
@@ -237,12 +180,6 @@ Deno.serve(async (req: Request) => {
           )
           throw new Error(`Falha na gravação do banco: ${insertError.message}`)
         }
-
-        await supabase
-          .schema('public')
-          .from('leads')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', lead.id)
 
         console.log(
           'Mensagem do cliente gravada com sucesso. Respondendo 200 OK.',
@@ -270,12 +207,6 @@ Deno.serve(async (req: Request) => {
         )
         throw new Error(`Message insert error: ${insertMsgError.message}`)
       }
-
-      await supabase
-        .schema('public')
-        .from('leads')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', lead.id)
 
       // 1. LIMITE DA JANELA DE HISTÓRICO
       const { data: historyData, error: historyError } = await supabase
